@@ -326,6 +326,13 @@ void pParseGlobal(symbol_t sym) {
   tExpect(TOK_SEMI);
 }
 
+void pParseLocal() {
+  token_t type = tNext();
+  token_t sym  = tNext();
+
+  tExpect(TOK_SEMI);
+}
+
 void pParseFunc(symbol_t sym) {
   sFuncAdd(sym);
 
@@ -347,10 +354,7 @@ void pParseFunc(symbol_t sym) {
     if (!tIsType()) {
       break;
     }
-
-    token_t type = tNext();
-    token_t name = tNext();
-    tExpect(TOK_SEMI);
+    pParseLocal();
   }
 
   // parse statements
