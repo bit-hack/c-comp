@@ -416,7 +416,7 @@ int main(int argc, char **args) {
   // discard first read (lK0 invalid)
   lNext();
 
-  //
+  // start parsing
   pParse();
 
   return 0;
