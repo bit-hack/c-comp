@@ -174,7 +174,12 @@ int sIntern(char *name) {
   return sSymNum++;
 }
 
+void sGlobalAdd(symbol_t sym) {
+  // XXX: todo
+}
+
 void sFuncAdd(symbol_t sym) {
+  // XXX: todo
 }
 
 // return true if current token is a type
@@ -280,8 +285,8 @@ void pStmtIf() {
 }
 
 void pStmtReturn() {
-  pExpr(1);             // <expr>
-  tExpect(TOK_SEMI);    // ;
+  pExpr(1);               // <expr>
+  tExpect(TOK_SEMI);      // ;
 }
 
 void pStmt() {
@@ -311,18 +316,18 @@ void pStmt() {
     return;
   }
 
-  // try to parse an expression
+  // expression
   pExpr(1);
   tExpect(TOK_SEMI);
 }
 
 void pParseGlobal(symbol_t sym) {
-  (void)sym;  // XXX: todo
+  sGlobalAdd(sym);
   tExpect(TOK_SEMI);
 }
 
 void pParseFunc(symbol_t sym) {
-  (void)sym;  // XXX: todo
+  sFuncAdd(sym);
 
   // parse arguments
   if (!tFound(TOK_RPAREN)) {
