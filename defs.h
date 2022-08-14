@@ -18,16 +18,22 @@
 #define TOK_SEMI    15  // ;
 #define TOK_LPAREN  16  // (
 #define TOK_RPAREN  17  // )
+#define TOK_COMMA   18  // ,
+#define TOK_LBRACE  19  // {
+#define TOK_RBRACE  20  // }
 #define TOK_SYMBOL  128
 #define TOK_LITERAL 129
-#define TOK_IF      130 // if
-#define TOK_INT     131 // int
-#define TOK_RETURN  132 // return
+
+#define SYM_IF      0 // if
+#define SYM_INT     1 // int
+#define SYM_RETURN  2 // return
 
 #define token_t int
+#define symbol_t int
 
 #define bool int
 #define true  1
 #define false 0
 
 void pExpr(int v);
+void pStmt();
