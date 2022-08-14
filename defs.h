@@ -27,6 +27,8 @@
 #define TOK_INT     131 // int
 #define TOK_RETURN  132 // return
 #define TOK_ELSE    133 // else
+#define TOK_CHAR    134 // char
+#define TOK_VOID    135 // void
 
 #define token_t  int
 #define symbol_t int

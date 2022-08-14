@@ -55,10 +55,13 @@ bool lFound(char c) {
 #define CHECK(X, T) if (strmatch(tSymbol, X)) return T;
 token_t tKeywordCheck() {
   switch (tSymbol[0]) {
+  case 'c': CHECK("char"  , TOK_CHAR);
   case 'e': CHECK("else"  , TOK_ELSE);
             break;
   case 'i': CHECK("int"   , TOK_INT);
             CHECK("if"    , TOK_IF);
+            break;
+  case 'v': CHECK("void",   TOK_VOID);
             break;
   case 'r': CHECK("return", TOK_RETURN);
             break;
@@ -176,7 +179,12 @@ void sFuncAdd(symbol_t sym) {
 
 // return true if current token is a type
 bool tIsType() {
-  return tToken == TOK_INT;
+  switch (tToken) {
+  case TOK_CHAR:
+  case TOK_INT:
+  case TOK_VOID: return true;
+  default:       return false;
+  }
 }
 
 // emit to output stream
@@ -325,8 +333,22 @@ void pParseFunc(symbol_t sym) {
     tExpect(TOK_RPAREN);
   }
 
-  // parse function body
+  // function body
   tExpect(TOK_LBRACE);
+
+  // parse locals
+  for (;;) {
+    tPeek();
+    if (!tIsType()) {
+      break;
+    }
+
+    token_t type = tNext();
+    token_t name = tNext();
+    tExpect(TOK_SEMI);
+  }
+
+  // parse statements
   while (!tFound(TOK_RBRACE)) {
     pStmt();
   }
