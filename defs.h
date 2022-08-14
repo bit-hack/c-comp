@@ -23,17 +23,23 @@
 #define TOK_RBRACE  20  // }
 #define TOK_SYMBOL  128
 #define TOK_LITERAL 129
+#define TOK_IF      130 // if
+#define TOK_INT     131 // int
+#define TOK_RETURN  132 // return
+#define TOK_ELSE    133 // else
 
-#define SYM_IF      0 // if
-#define SYM_INT     1 // int
-#define SYM_RETURN  2 // return
-
-#define token_t int
+#define token_t  int
 #define symbol_t int
 
 #define bool int
 #define true  1
 #define false 0
 
+void fatal(char *msg, ...);
+
 void pExpr(int v);
 void pStmt();
+
+bool strmatch(char *a, char *b);
+char *strskip(char *c);
+char *strcopy(char *dst, char *src);

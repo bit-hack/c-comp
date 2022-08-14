@@ -1,13 +1,14 @@
-expr: expr.c defs.h
-	gcc expr.c -O0 -g -o expr
+parse: parse.c util.c defs.h
+	# note: $@ is the rule name
+	gcc parse.c util.c -O0 -g -o $@
 
-test: expr
+test: parse
 	# note: the @ prefix stops echoing
 	@for FILE in tests/*.c; do \
 		echo "Testing $$FILE"; \
-		gcc -o /dev/null $$FILE; \
-		./expr $$FILE; \
+		gcc -fsyntax-only $$FILE; \
+		./parse $$FILE; \
 	done
 
 clean:
-	rm -rf expr
+	rm -rf parse

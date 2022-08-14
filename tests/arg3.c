@@ -1,4 +1,4 @@
-int test(int a) {
+int test(int a, int b, int c) {
     return 0;
 }
 

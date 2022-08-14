@@ -21,16 +21,6 @@ int sArgTable[16];      // argument table
 
 FILE *inFile;
 
-// XXX: make fatal(msg, ...)
-void fatal(char *msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  vfprintf(stderr, msg, args);
-  fprintf(stderr, "\n");
-  va_end(args);
-  exit(1);
-}
-
 bool lIsWhiteSpace(char c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
@@ -61,6 +51,21 @@ bool lFound(char c) {
   }
   return false;
 }
+
+#define CHECK(X, T) if (strmatch(tSymbol, X)) return T;
+token_t tKeywordCheck() {
+  switch (tSymbol[0]) {
+  case 'e': CHECK("else"  , TOK_ELSE);
+            break;
+  case 'i': CHECK("int"   , TOK_INT);
+            CHECK("if"    , TOK_IF);
+            break;
+  case 'r': CHECK("return", TOK_RETURN);
+            break;
+  default:  return TOK_SYMBOL;
+  }
+}
+#undef CHECK
 
 // next token
 token_t tNext() {
@@ -99,7 +104,7 @@ token_t tNext() {
         break;
     }
     tSymbol[tSymLen] = '\0';
-    return tToken = TOK_SYMBOL;
+    return tToken = tKeywordCheck();
   }
 
   // try simple tokens
@@ -133,37 +138,6 @@ token_t tPeek() {
   return tToken;
 }
 
-// print a token
-void tPrint(token_t t) {
-  switch (t) {
-  case TOK_SYMBOL:
-  case TOK_LITERAL: puts(tSymbol); break;
-  case TOK_EOF    : puts("\0");    break;
-  case TOK_ASSIGN : puts("=");     break;
-  case TOK_OR     : puts("|");     break;
-  case TOK_AND    : puts("&");     break;
-  case TOK_ADD    : puts("+");     break;
-  case TOK_SUB    : puts("-");     break;
-  case TOK_MUL    : puts("*");     break;
-  case TOK_DIV    : puts("/");     break;
-  case TOK_INC    : puts("++");    break;
-  case TOK_DEC    : puts("--");    break;
-  case TOK_EQUALS : puts("==");    break;
-  case TOK_LOGOR  : puts("||");    break;
-  case TOK_BITOR  : puts("|");     break;
-  case TOK_LOGAND : puts("&&");    break;
-  case TOK_BITAND : puts("&");     break;
-  case TOK_SEMI   : puts(";");     break;
-  case TOK_LPAREN : puts("(");     break;
-  case TOK_RPAREN : puts(")");     break;
-  case TOK_COMMA  : puts(",");     break;
-  case TOK_LBRACE : puts("{");     break;
-  case TOK_RBRACE : puts("}");     break;
-  default:
-    fatal("Unable to print unknown token");
-  }
-}
-
 // expect a specific token
 void tExpect(token_t tok) {
   token_t got = tNext();
@@ -181,30 +155,6 @@ bool tFound(token_t tok) {
   return false;
 }
 
-bool strmatch(char *a, char *b) {
-  while (true) {
-    if (*a == '\0' && *b == '\0') {
-      return true;
-    }
-    if (*a++ != *b++) {
-      return false;
-    }
-  }
-}
-
-// skip a string
-char *strskip(char *c) {
-  while (*c++);
-  return c;
-}
-
-char *strcopy(char *dst, char *src) {
-  while (*src) {
-    *dst++ = *src++;
-  }
-  *dst++ = '\0';
-  return dst;
-}
 
 // intern the string held in 'tSymbol'
 // add to symbol table if not present and return index
@@ -226,13 +176,7 @@ void sFuncAdd(symbol_t sym) {
 
 // return true if current token is a type
 bool tIsType() {
-  if (tToken == TOK_SYMBOL) {
-    switch (sIntern(tSymbol)) {
-//  case SYM_CHAR:
-    case SYM_INT: return true;
-    }
-  }
-  return false;
+  return tToken == TOK_INT;
 }
 
 // emit to output stream
@@ -251,13 +195,11 @@ void pPrimary() {
   }
 
   if (n == TOK_LITERAL) {
-    tPrint(n);
     cEmit(n);
     return;
   }
 
   if (n == TOK_SYMBOL) {
-    tPrint(n);
     cEmit(n);
 
     // xxx if ( function call
@@ -308,7 +250,6 @@ void pExpr(int min_prec) {
     // rhs
     pExpr(pPrec(op));
 
-    tPrint(op);
     cEmit(op);
   }
 }
@@ -321,37 +262,44 @@ void pType() {
 }
 
 void pStmtIf() {
-  tNext();              // if
-  tExpect(TOK_LPAREN);  // (
-  pExpr(1);             // <expr>
-  tExpect(TOK_RPAREN);  // )
-  pStmt();              // <stmt>
-  // XXX: if else ...
+  tExpect(TOK_LPAREN);    // (
+  pExpr(1);               // <expr>
+  tExpect(TOK_RPAREN);    // )
+  pStmt();                // <stmt>
+  if (tFound(TOK_ELSE)) { // else
+    pStmt();              // <stmt>
+  }
 }
 
 void pStmtReturn() {
-  tNext();              // return
   pExpr(1);             // <expr>
   tExpect(TOK_SEMI);    // ;
 }
 
 void pStmt() {
-  token_t t = tPeek();
 
-  // check symbol names
-  if (t == TOK_SYMBOL) {
-    symbol_t sym = sIntern(tSymbol);
-    switch (sym) {
-    case SYM_IF:     pStmtIf();     return;
-    case SYM_RETURN: pStmtReturn(); return;
-    }
+  // if statement
+  if (tFound(TOK_IF)) {
+    pStmtIf();
+    return;
+  }
+
+  // return statement
+  if (tFound(TOK_RETURN)) {
+    pStmtReturn();
+    return;
   }
 
   // compound statement
-  if (t == TOK_LBRACE) {
+  if (tFound(TOK_LBRACE)) {
     while (!tFound(TOK_RBRACE)) {
       pStmt();
     }
+    return;
+  }
+
+  // empty statement
+  if (tFound(TOK_SEMI)) {
     return;
   }
 
@@ -360,7 +308,13 @@ void pStmt() {
   tExpect(TOK_SEMI);
 }
 
-void pParseFunc() {
+void pParseGlobal(symbol_t sym) {
+  (void)sym;  // XXX: todo
+  tExpect(TOK_SEMI);
+}
+
+void pParseFunc(symbol_t sym) {
+  (void)sym;  // XXX: todo
 
   // parse arguments
   if (!tFound(TOK_RPAREN)) {
@@ -391,27 +345,25 @@ void pParse() {
 
     // if a function decl 
     if (tFound(TOK_LPAREN)) {
-      pParseFunc();
+      pParseFunc(sym);
     }
     else {
-      // XXX: global
+      pParseGlobal(sym);
     }
-
   }
 }
 
 int main(int argc, char **args) {
+
+  if (argc <= 1) {
+    fatal("Argument expected");
+  }
 
   // open input file for reading
   inFile = fopen(args[1], "r");
   if (!inFile) {
     return 1;
   }
-
-  // add keywords, note that this should match SYM_XXX constants
-  sIntern("if");
-  sIntern("int");
-  sIntern("return");
 
   // discard first read (lK0 invalid)
   lNext();
