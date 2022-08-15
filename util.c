@@ -39,3 +39,24 @@ char *strcopy(char *dst, char *src) {
   *dst++ = '\0';
   return dst;
 }
+
+// convert a string to an integer
+int strint(char *a) {
+  int val = 0;
+  while (*a != '\0') {
+    val = val * 10 + *a++ - '0';
+  }
+  return val;
+}
+
+int contains(symbol_t find, symbol_t *arr, int count) {
+  int i;
+  for (i=0; i<count; ++i) {
+    if (arr[i] == find) {
+      // position it was found in
+      return i;
+    }
+  }
+  // not found
+  return -1;
+}

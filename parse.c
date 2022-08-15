@@ -5,21 +5,33 @@
 
 #include "defs.h"
 
-char lK0, lK1;          // input delay line (lK1 = lookahead)
+char     lK0, lK1;              // input delay line (lK1 = lookahead)
+int      lLine;                 // currently lexed line number
 
-char tSymbol[128];      // currently parsed symbol
-int  tSymLen;           // current symbol length
+char     tSym[128];             // extracted currently parsed token
+int      tSymLen;               // current symbol length
+int      tSymValue;             // value if symbol is a literal
 
-token_t tToken;         // last parsed token
-bool    tPeeked;        // a peek was performed
+token_t  tToken;                // last parsed token
+bool     tPeeked;               // a peek was performed
 
-char sSymTab[1024*4];   // symbol table
-int  sSymNum;           // length of symbol table
+char     sSymTab[SYMTABLEN];    // symbol table
+int      sSymLen;               // current length of symbol table
 
-int sFuncTable[16];     // function table
-int sArgTable[16];      // argument table
+symbol_t sFuncTable[NFUNC];     // function table
+int      sFuncPos  [NFUNC];     // function code offsets
+int      sFuncCount;            // number of functions
 
-FILE *inFile;
+symbol_t sGlobalTable[NGLOBAL]; // global table
+int      sGlobalCount;          // number of globals
+
+symbol_t sArgTable[NARG];       // argument table
+int      sArgCount;             // number of arguments
+
+symbol_t sLocalTable[NLOCAL];   // locals table
+int      sLocalCount;           // number of locals
+
+FILE    *inFile;                // input file
 
 bool lIsWhiteSpace(char c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n';
@@ -45,32 +57,26 @@ char lNext() {
 
 // return true if lookahead is a specific char
 bool lFound(char c) {
-  if (lK1 == c) {
-    lNext();
-    return true;
-  }
-  return false;
+  return (lK1 == c) ? (lNext(), true) : false;
 }
 
-#define CHECK(X, T) if (strmatch(tSymbol, X)) return T;
+#define CHECK(X, T) if (strmatch(tSym, X)) return T;
 token_t tKeywordCheck() {
-  switch (tSymbol[0]) {
-  case 'c': CHECK("char"  , TOK_CHAR);
-  case 'e': CHECK("else"  , TOK_ELSE);
-            break;
-  case 'i': CHECK("int"   , TOK_INT);
-            CHECK("if"    , TOK_IF);
-            break;
-  case 'v': CHECK("void",   TOK_VOID);
-            break;
-  case 'r': CHECK("return", TOK_RETURN);
-            break;
-  default:  return TOK_SYMBOL;
+  switch (tSym[0]) {
+  case 'c': CHECK("char",   TOK_CHAR);   break;
+  case 'd': CHECK("do",     TOK_DO);     break;
+  case 'e': CHECK("else",   TOK_ELSE);   break;
+  case 'i': CHECK("int",    TOK_INT);
+            CHECK("if",     TOK_IF);     break;
+  case 'v': CHECK("void",   TOK_VOID);   break;
+  case 'r': CHECK("return", TOK_RETURN); break;
+  case 'w': CHECK("while",  TOK_WHILE);  break;
   }
+  return TOK_SYMBOL;
 }
 #undef CHECK
 
-// next token
+// return the next token
 token_t tNext() {
 
   // if peeked, just mark as consumed and return
@@ -83,6 +89,7 @@ token_t tNext() {
 
   // consume whitespace
   while (lIsWhiteSpace(c)) {
+    lLine = (c == '\n') ? (lLine + 1) : lLine;
     c = lNext();
   }
 
@@ -91,23 +98,34 @@ token_t tNext() {
   // tokenize literal values
   if (lIsNumber(c)) {
     for (;;c = lNext()) {
-      tSymbol[tSymLen++] = c;
+      tSym[tSymLen++] = c;
       if (!lIsNumber(lK1))
         break;
     }
-    tSymbol[tSymLen] = '\0';
+    tSym[tSymLen] = '\0';
+    tSymValue = strint(tSym);
     return tToken = TOK_LITERAL;
   }
 
   // tokenize alphanumeric symbols
   if (lIsAlpha(c)) {
     for (;;c = lNext()) {
-      tSymbol[tSymLen++] = c;
+      tSym[tSymLen++] = c;
       if (!lIsAlpha(lK1) && !lIsNumber(lK1))
         break;
     }
-    tSymbol[tSymLen] = '\0';
+    tSym[tSymLen] = '\0';
     return tToken = tKeywordCheck();
+  }
+
+  // tokenize character literals
+  if (c == '\'') {
+    char c = lNext();
+    if (lNext() != '\'') {
+      fatal("%u: error: malformed character literal", lLine);
+    }
+    tSymValue = c;
+    return tToken = TOK_LITERAL;
   }
 
   // try simple tokens
@@ -121,20 +139,24 @@ token_t tNext() {
   case ',':  return tToken = TOK_COMMA;
   case '{':  return tToken = TOK_LBRACE;
   case '}':  return tToken = TOK_RBRACE;
+  case '%':  return tToken = TOK_MOD;
+  case '<':  return tToken = lFound('=') ? TOK_LTEQU  : TOK_LT;
+  case '>':  return tToken = lFound('=') ? TOK_GTEQU  : TOK_GT;
   case '|':  return tToken = lFound('|') ? TOK_LOGOR  : TOK_BITOR;
   case '&':  return tToken = lFound('&') ? TOK_LOGAND : TOK_BITAND;
   case '+':  return tToken = lFound('+') ? TOK_INC    : TOK_ADD;
   case '-':  return tToken = lFound('-') ? TOK_DEC    : TOK_SUB;
-  case '=':  return tToken = lFound('=') ? TOK_EQUALS : TOK_ASSIGN;
+  case '=':  return tToken = lFound('=') ? TOK_EQU    : TOK_ASSIGN;
+  case '!':  return tToken = lFound('=') ? TOK_NEQU   : TOK_LOGNOT;
   }
 
   // unknown token in input stream
-  fatal("Unknown token %u in input stream", c);
+  fatal("%u: error: unexpected character '%c'", lLine, c);
   return tToken = TOK_EOF;
 }
 
 // advance to next token but dont treat as consumed
-// warning, a peek will wipe out the previous token.
+// warning, a peek will wipe out the previous token
 token_t tPeek() {
   tNext();
   tPeeked = true;
@@ -145,41 +167,68 @@ token_t tPeek() {
 void tExpect(token_t tok) {
   token_t got = tNext();
   if (got != tok) {
-    fatal("Expecting token %u but got %u\n", tok, got);
+    fatal("%u: error: expecting token %u but got %u\n", lLine, tok, got);
   }
 }
 
-// return true if a specific token was found
+// return true and consume if a specific token was found
 bool tFound(token_t tok) {
-  if (tPeek() == tok) {
-    tNext();  // consume
-    return true;
-  }
-  return false;
+  return (tPeek() == tok) ? (tNext(), true) : false;
 }
 
-
-// intern the string held in 'tSymbol'
+// intern the string held in 'tSym'
 // add to symbol table if not present and return index
 int sIntern(char *name) {
   char *c = sSymTab;
   int n = 0;
-  for (;n < sSymNum; ++n) {
+  for (;n < sSymLen; ++n) {
     if (strmatch(c, name)) {
       return n;
     }
     c = strskip(c);
   }
   strcopy(c, name);
-  return sSymNum++;
+  return sSymLen++;
 }
 
-void sGlobalAdd(symbol_t sym) {
-  // XXX: todo
+void sGlobalAdd(type_t type, symbol_t sym) {
+  if (sGlobalCount >= NGLOBAL)
+    fatal("%u: error: global count limit reached", lLine);
+  if (contains(sym, sGlobalTable, sGlobalCount) >= 0)
+    fatal("%u: error: global already defined", lLine);
+
+  sGlobalTable[sGlobalCount] = sym;
+  sGlobalCount++;
 }
 
-void sFuncAdd(symbol_t sym) {
-  // XXX: todo
+void sFuncAdd(type_t type, symbol_t sym) {
+  if (sFuncCount >= NFUNC)
+    fatal("%u: error: function count limit reached", lLine);
+  if (contains(sym, sFuncTable, sFuncCount) >= 0)
+    fatal("%u: error: function already defined", lLine);
+
+  sFuncTable[sFuncCount] = sym;
+  sFuncCount++;
+}
+
+void sArgAdd(type_t type, symbol_t sym) {
+  if (sArgCount >= NARG)
+    fatal("%u: error: argument count limit reached", lLine);
+  if (contains(sym, sArgTable, sArgCount) >= 0)
+    fatal("%u: error: duplicate arguments", lLine);
+
+  sArgTable[sArgCount] = sym;
+  sArgCount++;
+}
+
+void sLocalAdd(type_t type, symbol_t sym) {
+  if (sLocalCount >= NLOCAL)
+    fatal("%u: error: local count limit reached", lLine);
+  if (contains(sym, sLocalTable, sLocalCount) >= 0)
+    fatal("%u: error: local already defined", lLine);
+
+  sLocalTable[sLocalCount] = sym;
+  sLocalCount++;
 }
 
 // return true if current token is a type
@@ -197,8 +246,17 @@ void cEmit(int c) {
 //  fputc(c, stdout);
 }
 
+// consume a function call
+void pExprCall(symbol_t sym) {
+  while (!tFound(TOK_RPAREN)) {
+    do {
+      pExpr(1);
+    } while (tFound(TOK_COMMA));
+  }
+}
+
 // consume a primary expression
-void pPrimary() {
+void pExprPrimary() {
   token_t n = tNext();
 
   if (n == TOK_LPAREN) {
@@ -213,27 +271,49 @@ void pPrimary() {
   }
 
   if (n == TOK_SYMBOL) {
+
+    symbol_t sym = sIntern(tSym);
+
+    if (tFound(TOK_LPAREN)) {
+      pExprCall(sym);
+      return;
+    }
+
+    // if (tFound(TOK_LBRACKET)) {
+    //   pExprSubscript(sym);
+    //   return;
+    // }
+
+    // place symbol value on the stack
     cEmit(n);
-
-    // xxx if ( function call
-    // xxx if [ array access
-
     return;
   }
 
-  fatal("expected literal or name");
+  fatal("%u: error: expected literal or name", lLine);
 }
 
 // the precedence table
 int pPrec(token_t c) {
   switch (c) {
   case TOK_ASSIGN: return 1;
-  case TOK_BITAND: return 2;
-  case TOK_BITOR:  return 2;
-  case TOK_ADD:    return 3;
-  case TOK_SUB:    return 3;
-  case TOK_MUL:    return 4;
-  case TOK_DIV:    return 4;
+  case TOK_LOGOR:  return 2;
+  case TOK_LOGAND: return 3;
+  case TOK_BITOR:  return 4;
+//case TOK_BITXOR: ...
+  case TOK_BITAND: return 5;
+  case TOK_NEQU:
+  case TOK_EQU:    return 6;
+  case TOK_LTEQU:
+  case TOK_GTEQU:
+  case TOK_LT:
+  case TOK_GT:     return 7;
+//case TOK_SHR: ...
+//case TOK_SHL: ...
+  case TOK_ADD:
+  case TOK_SUB:    return 8;
+  case TOK_MOD:
+  case TOK_MUL:
+  case TOK_DIV:    return 9;
   }
   return 0;
 }
@@ -245,8 +325,10 @@ bool pIsOperator(token_t c) {
 
 // precedence climbing expression parser
 void pExpr(int min_prec) {
+
   // lhs
-  pPrimary();
+  pExprPrimary();
+
   // while our operator is equal or higher precidence
   while (1) {
     // look ahead for possible operators
@@ -267,14 +349,19 @@ void pExpr(int min_prec) {
   }
 }
 
-void pType() {
+type_t pType() {
   token_t type = tNext();
   if (!tIsType()) {
-    fatal("Type expected");
+    fatal("%u: error: type expected", lLine);
   }
+
+  // XXX: consume derefs
+
+  return type;  // XXX: todo
 }
 
 void pStmtIf() {
+                          // if
   tExpect(TOK_LPAREN);    // (
   pExpr(1);               // <expr>
   tExpect(TOK_RPAREN);    // )
@@ -284,8 +371,27 @@ void pStmtIf() {
   }
 }
 
-void pStmtReturn() {
+void pStmtWhile() {
+                          // while
+  tExpect(TOK_LPAREN);    // (
   pExpr(1);               // <expr>
+  tExpect(TOK_RPAREN);    // )
+  pStmt();                // <stmt>
+}
+
+void pStmtReturn() {
+                          // return
+  pExpr(1);               // <expr>
+  tExpect(TOK_SEMI);      // ;
+}
+
+void pStmtDo() {
+                          // do
+  pStmt();                // <stmt>
+  tExpect(TOK_WHILE);     // while
+  tExpect(TOK_LPAREN);    // (
+  pExpr(1);               // <expr>
+  tExpect(TOK_RPAREN);    // )
   tExpect(TOK_SEMI);      // ;
 }
 
@@ -300,6 +406,18 @@ void pStmt() {
   // return statement
   if (tFound(TOK_RETURN)) {
     pStmtReturn();
+    return;
+  }
+
+  // while statement
+  if (tFound(TOK_WHILE)) {
+    pStmtWhile();
+    return;
+  }
+
+  // do while statement
+  if (tFound(TOK_DO)) {
+    pStmtDo();
     return;
   }
 
@@ -321,26 +439,35 @@ void pStmt() {
   tExpect(TOK_SEMI);
 }
 
-void pParseGlobal(symbol_t sym) {
-  sGlobalAdd(sym);
+void pParseGlobal(type_t type, symbol_t sym) {
+  sGlobalAdd(type, sym);
   tExpect(TOK_SEMI);
 }
 
 void pParseLocal() {
-  token_t type = tNext();
-  token_t sym  = tNext();
-
+  type_t   type = pType();
+  token_t  name = tNext();
+  symbol_t sym  = sIntern(tSym);
+  sLocalAdd(type, sym);
   tExpect(TOK_SEMI);
 }
 
-void pParseFunc(symbol_t sym) {
-  sFuncAdd(sym);
+void pParseFunc(type_t type, symbol_t sym) {
+
+  // new scope so clear args and locals
+  sArgCount   = 0;
+  sLocalCount = 0;
+
+  // record new function
+  sFuncAdd(type, sym);
 
   // parse arguments
   if (!tFound(TOK_RPAREN)) {
     do {
-      pType();
+      type_t  type = pType();
       token_t name = tNext();
+      symbol_t sym = sIntern(tSym);
+      sArgAdd(type, sym);
     } while (tFound(TOK_COMMA));
     tExpect(TOK_RPAREN);
   }
@@ -367,27 +494,29 @@ void pParse() {
   while (!tFound(TOK_EOF)) {
 
     // parse a type
-    pType();
+    type_t type = pType();
 
     // parse a name
     tExpect(TOK_SYMBOL);
-    symbol_t sym = sIntern(tSymbol);
-    sFuncAdd(sym);
+    symbol_t sym = sIntern(tSym);
 
     // if a function decl 
     if (tFound(TOK_LPAREN)) {
-      pParseFunc(sym);
+      pParseFunc(type, sym);
     }
     else {
-      pParseGlobal(sym);
+      pParseGlobal(type, sym);
     }
   }
 }
 
 int main(int argc, char **args) {
 
+  // line counting starts at 1
+  lLine = 1;
+
   if (argc <= 1) {
-    fatal("Argument expected");
+    fatal("%u: error: argument expected", lLine);
   }
 
   // open input file for reading
