@@ -44,6 +44,7 @@
 #define NARG        8
 #define NLOCAL      32
 #define SYMTABLEN   (1024*4)
+#define NCODELEN    (1024*4)
 
 #define token_t     int
 #define symbol_t    int
@@ -56,6 +57,7 @@
 void  fatal   (char *msg, ...);
 void  pExpr   (int v);
 void  pStmt   ();
+void  cEmit   (int c);
 bool  strmatch(char *a, char *b);
 char *strskip (char *c);
 char *strcopy (char *dst, char *src);

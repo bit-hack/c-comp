@@ -31,6 +31,9 @@ int      sArgCount;             // number of arguments
 symbol_t sLocalTable[NLOCAL];   // locals table
 int      sLocalCount;           // number of locals
 
+int      cCode[NCODELEN];       // output code stream
+int      cCodeLen;              // output code written
+
 FILE    *inFile;                // input file
 
 bool lIsWhiteSpace(char c) {
@@ -150,7 +153,6 @@ token_t tNext() {
   case '!':  return tToken = lFound('=') ? TOK_NEQU   : TOK_LOGNOT;
   }
 
-  // unknown token in input stream
   fatal("%u: error: unexpected character '%c'", lLine, c);
   return tToken = TOK_EOF;
 }
@@ -179,6 +181,7 @@ bool tFound(token_t tok) {
 // intern the string held in 'tSym'
 // add to symbol table if not present and return index
 int sIntern(char *name) {
+  // XXX: todo, check for symtab overflow
   char *c = sSymTab;
   int n = 0;
   for (;n < sSymLen; ++n) {
@@ -191,6 +194,7 @@ int sIntern(char *name) {
   return sSymLen++;
 }
 
+// a new global is being declared
 void sGlobalAdd(type_t type, symbol_t sym) {
   if (sGlobalCount >= NGLOBAL)
     fatal("%u: error: global count limit reached", lLine);
@@ -201,6 +205,7 @@ void sGlobalAdd(type_t type, symbol_t sym) {
   sGlobalCount++;
 }
 
+// a new function is being declared
 void sFuncAdd(type_t type, symbol_t sym) {
   if (sFuncCount >= NFUNC)
     fatal("%u: error: function count limit reached", lLine);
@@ -211,6 +216,7 @@ void sFuncAdd(type_t type, symbol_t sym) {
   sFuncCount++;
 }
 
+// a new argument is being declared
 void sArgAdd(type_t type, symbol_t sym) {
   if (sArgCount >= NARG)
     fatal("%u: error: argument count limit reached", lLine);
@@ -221,6 +227,7 @@ void sArgAdd(type_t type, symbol_t sym) {
   sArgCount++;
 }
 
+// a new local has been declared
 void sLocalAdd(type_t type, symbol_t sym) {
   if (sLocalCount >= NLOCAL)
     fatal("%u: error: local count limit reached", lLine);
@@ -239,11 +246,6 @@ bool tIsType() {
   case TOK_VOID: return true;
   default:       return false;
   }
-}
-
-// emit to output stream
-void cEmit(int c) {
-//  fputc(c, stdout);
 }
 
 // consume a function call
@@ -508,6 +510,17 @@ void pParse() {
       pParseGlobal(type, sym);
     }
   }
+}
+
+void cSymbolLoad(symbol_t sym) {
+  // XXX: find and load symbol
+}
+
+// emit to output code stream
+void cEmit(int c) {
+  if (cCodeLen >= NCODELEN)
+    fatal("%u: error: code limit reached", lLine);
+  cCode[cCodeLen++] = c;
 }
 
 int main(int argc, char **args) {
