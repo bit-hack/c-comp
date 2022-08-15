@@ -13,15 +13,22 @@ int main() {
     {
     }
     if (one_local) {
-        return 2;
+        return 'a';
     }
     else {
         return 3;
     }
 
-    if (two_locals) {
-        1234;
+    while (func1(1, 2)) {
+        if (two_locals) {
+            1234;
+        }
     }
 
-    return 0;
+    do {
+        if (one_local)
+            one_local = 2;
+    } while (1);
+
+    return func1(one_local, two_locals);
 }
