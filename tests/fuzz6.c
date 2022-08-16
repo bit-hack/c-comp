@@ -2,24 +2,22 @@ int g9;
 int wvzLjGWr;
 char IH;
 int TgFLlYq() {
-  while ((IH = 38))
-    {
-      do {
-        putchar('t');
-      } while ((('x')));
-      {
-        putchar('k');
-        (4);
-      }
-      g9;
-    }
-  putchar('g');
-  while ((45))
-    return (((IH = ((IH)))));
-  putchar('l');
+  (g9 = IH * 't');
   {
-    if (TgFLlYq() + g9)
-      (TgFLlYq());
+    {
+    }
+    return TgFLlYq() * ((4));
+  }
+  do {
+    {
+      if ((45) + 141)
+        while ((IH = (TgFLlYq())))
+          return 'h' * TgFLlYq();
+      203;
+    }
+  } while ('m');
+  TgFLlYq();
+  {
   }
   wvzLjGWr;
 }
@@ -27,58 +25,86 @@ int gP(int LzP7D, char GG3, char rI) {
   int UGM0;
   int uyYIA;
   int mPZYdc;
-  do {
-    while ('p')
+  if (('p'))
+    while ('j')
+      return (TgFLlYq());
+  25;
+  while (127 / 'd' + 'u')
+    {
       {
-        putchar('b');
-        putchar('g');
       }
-  } while (IH);
+    }
+  if (gP('w', 'n', 'h'))
+    204;
+  if (113)
+    return (g9 = wvzLjGWr);
   {
-    127 / 'd' + 'u';
-  }
-  gP(148, gP('w', 'n', 'h'), 'n');
-  putchar('h');
-  wvzLjGWr;
-  {
-    222;
-    (uyYIA = gP(mPZYdc, 'i', 'h')) || 203;
+    while (uyYIA % gP(151, 'i', 'h') && 203)
+      {
+      }
+    return gP(120, 0, 'i');
   }
 }
-int XU2TPD_P(int HsV) {
-  int TAdytx;
-  while ((HsV))
-    while (IH)
-      putchar('t');
-  putchar('d');
+int sVe(int TAdytx) {
+  while (wvzLjGWr)
+    IH;
+  gP((TAdytx = wvzLjGWr || 162), TAdytx / 'x' && g9 * g9, 147 % IH);
+  'd';
+}
+int qNy() {
+  int CPxlQc;
+  int eUyg;
   {
-    putchar('p');
-    gP(TgFLlYq(), IH, 106);
-    return (wvzLjGWr = gP(IH, TAdytx, 147 % g9)) && (IH = (g9 = wvzLjGWr));
+    {
+      if (('o'))
+        return 60;
+      (107 / 14) - (70 / wvzLjGWr);
+    }
   }
-  while ('y')
-    putchar('r');
-  putchar('p');
-  putchar('l');
+  if (205)
+    while (g9)
+      88;
+  do {
+    while (gP((CPxlQc = g9), (sVe(((91)))), (IH = 'e') && 'f'))
+      {
+        while (wvzLjGWr % 250)
+          's' * CPxlQc;
+        while ((148))
+          (qNy());
+        eUyg;
+      }
+  } while ((((('t')))));
 }
-int qeUygkj(char xAKcC0VI, int yJjy) {
-  putchar('c');
-}
-int DI8DZI(char hD, int KE8hAT) {
-  (qeUygkj(((91)), 'l' && ('f')));
-  putchar('b');
-}
-int D0(int HnEc, int OWRPm) {
+int VR(char lfrfa, char oW78Ow, char T1) {
+  char CP;
+  while ((lfrfa = qNy()))
+    'h';
+  ((IH = gP(CP, ('k'), 'p')));
   {
-    while (((HnEc = OWRPm)))
-      putchar('s');
-    ((wvzLjGWr = (g9 = 'n' - wvzLjGWr)));
+    {
+    }
+    {
+    }
+    do {
+      'a';
+    } while (152);
   }
-  (g9 = 'p' % 12 || OWRPm);
-  putchar('k');
+}
+int XML() {
+  (sVe((wvzLjGWr = ('w'))));
+  do {
+    do {
+      sVe(g9);
+    } while (144 * 63);
+  } while (sVe((176)));
+  do {
+    do {
+      {
+      }
+    } while ((84) - 'j');
+  } while (g9);
 }
 int main() {
-  char ugI;
-  putchar('g');
-  putchar('m');
+  char Cu;
+  char Qi3yoJ;
 }

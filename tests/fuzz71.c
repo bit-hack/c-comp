@@ -11,44 +11,68 @@ int kC(char hXDRiVB) {
   int ZvA9;
 }
 int Gi_QM(char Qr1R, char BMJ, int FtEtXqGM) {
-  (yv || 'd');
-}
-int Da(char wm, int RDcES) {
-  int PQox;
-  int fnny;
-  putchar('k');
   {
-    (240);
   }
-  putchar('m');
 }
-int doQO2() {
-  int aD72x;
-  VHGlFBP;
-}
-int sngE2I() {
-  char yKJ_zQ;
-  char KspYRQO;
-  char oqN;
+int DiCvD3() {
   {
-    'b';
-    return Gi_QM(89, (233 * tF), 64);
-    if (182)
-      ((52));
-  }
-  while (Da((AGrcc2Jt), 'j' || 200 && tF + 'v'))
-    sngE2I();
-  if ((rWS + 87))
-    if (74)
+    if ((rWS))
       {
+        tF;
+        if ('n' - (rWS = 160 + ap_foXS))
+          (VHGlFBP = 'm');
         do {
-          return doQO2();
-        } while (Gi_QM(145 / (67), (tF = (147)), 'n') % (KspYRQO = uNs3Vo_));
+          (('u' - 'u'));
+        } while (((rWS = (yv) % 'n')));
       }
-  while (yKJ_zQ)
-    do {
-      putchar('q');
-    } while (('p') && doQO2() - (doQO2()));
+  }
+  211 * (DiCvD3());
+}
+int a71KJ_z(char FpspYRQ, char HU, char FkNJKQ) {
+  int C3wZr69W;
+  char V9gpK33;
+  char FngaH;
+  {
+    return 174;
+    return 'j';
+  }
+  do {
+    while (17 + 'f')
+      {
+        (HU + 87 * ap_foXS);
+      }
+  } while ((C3wZr69W = V9gpK33));
+  {
+    while (DiCvD3() % 145 / (67))
+      if (ap_foXS)
+        kC(yv / 's' && 'j');
+    ('p') && Gi_QM((8), 'e' / ('h') || tF, 41 - 11);
+    return Gi_QM(FngaH, rWS, 'u');
+  }
+}
+int zIB() {
+  char LaX;
+  int Jsui;
+  int Gd;
 }
 int main() {
+  char HMiIQh;
+  char kGGVk3l;
+  {
+    101;
+  }
+  105;
+  if (14 / ((AGrcc2Jt = 90)))
+    if (zIB())
+      {
+        do {
+          yv;
+        } while (a71KJ_z((tF), 'e', ('j' % 112) + (229)));
+      }
+  AGrcc2Jt;
+  (140);
+  if (138)
+    {
+      ('b');
+    }
 }

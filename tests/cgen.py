@@ -220,9 +220,6 @@ def gen_stmt():
     global _stmt_complex
     funcs = [
         gen_stmt_return   if _stmt_complex >= 1 else None,
-        gen_stmt_putchar ,
-        gen_stmt_putchar ,
-        gen_stmt_putchar ,
         gen_stmt_if       if _stmt_complex <= 3 else None,
         gen_stmt_compound if _stmt_complex <= 2 else None,
         gen_stmt_compound if _stmt_complex <= 2 else None,

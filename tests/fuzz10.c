@@ -1,24 +1,30 @@
 int nr7Wj(char tCU2AS) {
   int AUlGd;
-  while (149)
-    if (nr7Wj(((AUlGd = ('k')))))
-      putchar('t');
-  putchar('w');
-  putchar('w');
-  putchar('o');
-  do {
+  149;
+  if (nr7Wj(((AUlGd = ('k')))))
     do {
-      {
-        57;
-        putchar('e');
-      }
-    } while (nr7Wj((AUlGd = 'u')));
-  } while ('a');
-  putchar('a');
+      if (nr7Wj('w'))
+        183;
+    } while ('w');
+  while (nr7Wj(tCU2AS))
+    do {
+      while ((AUlGd = (tCU2AS = 118 % AUlGd - ('w') || (32))))
+        return AUlGd;
+    } while ('v');
+  do {
+    return 0;
+  } while (((tCU2AS = (AUlGd = AUlGd))));
+  {
+  }
+  if (161)
+    while (nr7Wj('i' || 19))
+      'x';
 }
-int kly(int u6QH1, char FxrSWO) {
-  putchar('e');
-  putchar('d');
+int _TmqEJ(char MBt1at73, int HN4H6tzL) {
+  int JlbPA;
 }
 int main() {
+  _TmqEJ('s', ('w'));
+  if (108)
+    return 20;
 }

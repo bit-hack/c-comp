@@ -6,24 +6,24 @@ char su;
 int sPmD2Vv;
 char ob;
 int G_U8() {
-  if ('e')
-    (ob = 'c') / 32;
-  putchar('w');
+  {
+    {
+      while (sPmD2Vv)
+        'c';
+    }
+  }
+  while ((sPmD2Vv = B52zp) - 8 + G_U8())
+    return ob;
 }
 int main() {
   do {
-    return 65;
-  } while ('q');
-  if ((Nu = G_U8()))
-    do {
-      return ('t');
-    } while ('g');
-  putchar('m');
-  putchar('l');
-  {
-    (eT0hNSn0 = sPmD2Vv);
-    while (((eT0hNSn0 = su)))
-      184;
-    (sPmD2Vv = 70);
-  }
+    't';
+  } while ('g');
+  if ('m')
+    while ('r')
+      do {
+        do {
+          (sPmD2Vv = ((eT0hNSn0 = su)));
+        } while ((184));
+      } while ('q');
 }

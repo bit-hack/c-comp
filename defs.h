@@ -54,6 +54,7 @@
 #define INS_JNEQ    256 + 12  // jump if not equal
 #define INS_JGT     256 + 13  // jump if greater than
 #define INS_JGTE    256 + 14  // jump if greater than or equal to
+#define INS_DROP    256 + 15  // drop top of stack
 
 #define NFUNC       32
 #define NGLOBAL     32

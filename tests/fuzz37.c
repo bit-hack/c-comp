@@ -2,34 +2,25 @@ int BkGgoC(char nz4P, char K1xM) {
   char VU;
   char UMXJr0Z7;
   char OUdrv1;
-  if ('f')
-    do {
-      putchar('a');
-    } while (('u'));
+  {
+  }
+  245;
+  {
+  }
+  BkGgoC('q', VU);
   do {
-    {
-      VU;
-      putchar('g');
-    }
-  } while (250 * nz4P + (((104))));
-  if ('w')
-    if ((245) - (228) * (UMXJr0Z7 = 'q'))
-      putchar('a');
-  while ((nz4P = (nz4P = (VU = ('v')))))
-    VU;
-  putchar('d');
+    250 * nz4P + (((104)));
+  } while (UMXJr0Z7);
 }
-int VB4(char Mg8jRkWr, char CMoN9, char wH) {
+int aTcko() {
 }
 int main() {
-  int sAhxQE;
-  char kLuKC;
-  char fK7qSHu9;
-  {
-    kLuKC;
-    if ((kLuKC = VB4('n', (sAhxQE), 18)))
-      sAhxQE;
-  }
-  {
-  }
+  char U41Xv;
+  char _Vzp1;
+  int L2cTaDR;
+  while (('k'))
+    if ('i')
+      while ((_Vzp1 = (_Vzp1 = L2cTaDR)))
+        if (((_Vzp1 = 'e')))
+          (U41Xv = ('s' * 'j'));
 }

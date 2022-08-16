@@ -11,6 +11,7 @@ do
     gcc "fuzz$i.c"
     # try to run it
     timeout 1 ./a.out > /dev/null
+    rm -f a.out
     code=$?
     echo "code=$code"
     # if its a timeout or segfault then delete it

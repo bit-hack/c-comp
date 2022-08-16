@@ -1,57 +1,91 @@
 int DD(int JDjOB, int Ik8ltT55) {
   char PY5L;
-  (JDjOB);
-  'q' + Ik8ltT55 % (PY5L = JDjOB);
-  (PY5L = 53);
-}
-int VNse(int Ky0N0, char I_Af, char tH) {
-  int qvdI;
-  int rP1OP;
-  int c7;
-  207;
+  {
+    return 'q' + Ik8ltT55 % (PY5L = JDjOB) + (53) && Ik8ltT55;
+    return (Ik8ltT55 = 'u');
+    if ((Ik8ltT55) || 51 || DD(56, DD((JDjOB), 'v')))
+      if (8)
+        231;
+  }
+  116;
+  31 || (207);
 }
 int LmnYu(char Bz, char cjP) {
-  218;
-  putchar('u');
-  putchar('m');
-  putchar('u');
-}
-int Di7_OqX(char M3hIp8S, int uB, char MIAt) {
-  170 / 'u';
-  while (DD(181 - 'j', 202 / (uB = M3hIp8S)))
-    putchar('n');
-}
-int a1(int ZM) {
-  char JWZWcajG;
-  char Ych;
-  char _9gZ;
-  if (Ych)
+  while (218)
     do {
-      return (('k')) - DD(63, Ych) || 236;
-    } while ('p' - ZM + 'k');
-  putchar('f');
+      'u' % (cjP = cjP);
+    } while (83);
+  if ('e')
+    {
+      while ('l')
+        if ((cjP = cjP))
+          230;
+      while (122)
+        return (Bz = Bz);
+    }
   {
-    if ('p')
+    while ('u')
       {
-        putchar('c');
-        return 242;
-        return 161;
       }
-    if (LmnYu(_9gZ, VNse('d', Ych - (Ych), (17)) * 'c'))
-      putchar('h');
-    putchar('v');
+    {
+    }
+    'h';
   }
-  while (_9gZ)
-    putchar('d');
-  putchar('w');
-  if ('h')
-    if (LmnYu((JWZWcajG = 176) % 'q', (_9gZ = (42))))
-      putchar('e');
+  {
+    if (202 / (Bz = Bz))
+      {
+        if ((cjP = 96))
+          (DD(172, 234));
+      }
+    do {
+      (cjP = 'h');
+    } while (('l'));
+  }
+}
+int _9gZ(char cwDAo0yN, int YXQ90, char Jjnk) {
+  char oCmYj4;
+  int bdh5;
+}
+int _l8UII(char NK, char oqT6mvQK, int abJ) {
+  int Pz3zhtT;
+  int tbp;
+  char Ej;
+  LmnYu(125 % 'q', (Ej = (42))) && _l8UII('w', tbp, _l8UII('y', (('d')), ('t')));
+}
+int zXCa0F() {
+  char Gi4L;
+  int Zxp;
+  do {
+    do {
+      while (92)
+        return (((Zxp) - 184)) / 106;
+    } while ((Zxp = ((38))) - zXCa0F());
+  } while (61);
+  if ((61))
+    'd' + LmnYu(78, 'x');
+  while ((Zxp = (LmnYu(159 + Gi4L, ((Zxp))))))
+    {
+      do {
+        (Gi4L = Zxp);
+      } while ('o');
+      (Zxp = 'o');
+    }
+  while (234)
+    'x';
 }
 int main() {
-  char cMH7HalG;
-  if (LmnYu('d', (cMH7HalG = 't')))
-    putchar('c');
-  'p';
-  putchar('g');
+  int zVx;
+  while (205)
+    'i';
+  {
+    (zVx = ((zVx))) - 141 + 'p';
+  }
+  'x' || (zVx = 204);
+  do {
+    if (((13 / zVx)))
+      while (LmnYu(zVx, 32 || 'q'))
+        ('j' && 237);
+  } while ((zVx = zXCa0F()));
+  'c';
+  (135);
 }

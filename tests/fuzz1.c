@@ -6,35 +6,26 @@ int As;
 int K1b() {
   int Goj4J;
   char Ov5npLO;
-  'l' || 'j';
-  while (125)
+  do {
     {
-      NxsHHt;
-      putchar('o');
+      {
+        K1b();
+        while (K1b())
+          return nWZ && 'n';
+      }
+      do {
+        79;
+      } while (((As)) % (Ov5npLO = 86) - (('h')));
     }
+  } while (90);
+  {
+    do {
+      if ((((NxsHHt))))
+        (K1b());
+    } while ('n' || sPVue);
+  }
   {
   }
-}
-int ocnA(char vHE) {
-  putchar('e');
-  {
-    {
-      putchar('a');
-      if ('h')
-        putchar('p');
-    }
-    putchar('m');
-    {
-      putchar('c');
-    }
-  }
-  putchar('n');
-  while ((As = K1b()))
-    {
-    }
-  {
-  }
-  putchar('i');
 }
 int q7gm(char qI0EGAx, int VUus, int _I1jLFcY) {
   int yI3dP;
@@ -42,31 +33,61 @@ int q7gm(char qI0EGAx, int VUus, int _I1jLFcY) {
 int Hrw(char I326, int L60HS) {
   int UCs;
   int HY6ow1s;
-  while ('s')
-    {
-      putchar('d');
-      putchar('w');
-    }
-}
-int fsh(char emL2bNVd, int LR6So) {
-  char Itpuz;
-  char peKn;
-  int VfkaQT;
   {
-    putchar('i');
   }
-  while (62 + 'f')
+}
+int gLjCsiXK() {
+  char zDm;
+  int ONVdNxXR;
+  {
+    return (gLjCsiXK());
+    return (ONVdNxXR = K2I);
+    zDm;
+  }
+  if (Hrw('q', 194 / 245) && 62 + 'f')
     94;
-  putchar('l');
-  if (sPVue)
-    As;
-  do {
-    sPVue;
-  } while (q7gm((K2I = 'h' && LR6So), K2I, 'y'));
+  while ('a')
+    if ((zDm))
+      while (143)
+        if (gLjCsiXK())
+          (ONVdNxXR = (K2I) / 'y');
 }
 int qW(char y1slP, int BN) {
 }
+int gFJE(int FY_aRf_, int uh, int CgpT) {
+  do {
+    {
+    }
+  } while (NxsHHt + (NxsHHt = (45) / (78)));
+  'e' * gLjCsiXK();
+  {
+    if ((K2I = (FY_aRf_ = ('u'))) || 254)
+      141;
+    {
+    }
+    {
+      (CgpT);
+    }
+  }
+  82 + CgpT || K2I * qW('a', nWZ);
+}
 int main() {
-  int dJEY;
-  int q_aRf_;
+  int bZ;
+  int l2w6Am;
+  {
+  }
+  {
+  }
+  while ((bZ = K2I) && 19)
+    qW((l2w6Am = (NxsHHt = 72 || 'd')), (As = (bZ = ((122)))));
+  {
+    return (As);
+    28;
+  }
+  while ((l2w6Am + (As) - (As)) || (q7gm(40, K2I, 'v')))
+    {
+      while ('s')
+        while (((251) - ('l')))
+          return q7gm(110 - (NxsHHt) / 'x' + ('x' % 'x'), (209), (K2I = NxsHHt) - 'e');
+    }
 }

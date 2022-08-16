@@ -4,11 +4,28 @@ int N2Uqg;
 char NS;
 char RkR5oLNe;
 int main() {
-  putchar('u');
+  102;
   do {
-    return (131);
-  } while (194);
-  'h' - (((2)));
-  t7wYd;
-  putchar('r');
+    't';
+  } while (main());
+  if ('f')
+    {
+    }
+  if (2)
+    {
+      94;
+      while ('t' - 97)
+        NS;
+    }
+  if (12)
+    while (t7wYd + main())
+      {
+        do {
+          NS;
+        } while ('e');
+        NS;
+        do {
+          RkR5oLNe;
+        } while ((N2Uqg = 'e'));
+      }
 }

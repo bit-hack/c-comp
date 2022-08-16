@@ -8,7 +8,6 @@ int ylvcmH(int DsnQ) {
   int sA_V4Oo;
 }
 int main() {
-  {
-    putchar('a');
-  }
+  if (Mi96q)
+    return ylvcmH((Mi96q = 110));
 }

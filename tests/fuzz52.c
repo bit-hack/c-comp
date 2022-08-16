@@ -4,12 +4,19 @@ int Asy4;
 int main() {
   int vk;
   char bkDeN4;
+  while (((bkDeN4 = Mz)))
+    if ('x')
+      {
+        do {
+          221;
+        } while (63);
+        do {
+          (vk = ((vk))) && 'm';
+        } while ((bkDeN4 = (Mz = 'i' / ((73)))));
+        main();
+      }
   {
   }
-  do {
-    return 'x' || bkDeN4;
-  } while (229);
-  do {
-    putchar('d');
-  } while (Mz);
+  while ((Asy4))
+    return 'y';
 }

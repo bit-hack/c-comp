@@ -10,54 +10,71 @@ int oVRg(char KzkVP7) {
   char BDAFFq;
   int yH0Hy0Fl;
   char BmC7;
-  do {
-    putchar('v');
-  } while ((3));
-  if ((KzkVP7 = 'm') / hxA0)
-    putchar('t');
-  KzkVP7;
-  while (oVRg('n' - 106 - TDhO('b' - 27)))
-    return (BDAFFq = yH0Hy0Fl);
+  ol;
+  3;
+  {
+    return hxA0;
+  }
+  {
+    hxA0;
+  }
 }
-int xtM5h() {
-  int O9mCdv;
-  char faaEKK3V;
-  char DjLOlXD;
-  'o';
-  while (oVRg((('n'))))
+int AKY5KAT(int dQQ, int dV) {
+  {
     {
-      {
-        putchar('j');
-      }
     }
-  while (((31)))
-    do {
-      {
-        do {
-          putchar('k');
-        } while (218);
-        (('q'));
-        (hxA0 = faaEKK3V * Luu);
-      }
-    } while ((Luu = TDhO('i')));
-}
-int F_Vd() {
-  (Luu = (((('y')))));
-}
-int B4cNAO(int vW3jm_, int ncmNNPO) {
-  char RL4p;
-  char T0rDtV;
-  int BwpvDdkV;
-  {
-    return ol;
   }
-  putchar('o');
-  ncmNNPO;
+}
+int JlR5oLL(char phpSdQ9) {
+  char aht8aa;
+  int z3Vc;
+  int CLOlX;
   {
+    while (AKY5KAT(TDhO(('n')), ol))
+      85;
+    if (219)
+      do {
+        TDhO('t');
+      } while ('y');
   }
+  {
+    TDhO((hxA0));
+  }
+}
+int RyL1s(char vJDLl, int taQYm_Vd, char y0g8v) {
+  char ZceqQqr;
+  char CNA;
+  218;
 }
 int main() {
-  char iv_ZVuh;
-  int kkW7ewR;
-  putchar('r');
+  do {
+    return (Luu = (TDhO(155 + ol)));
+  } while (('p'));
+  {
+    while (ol || oVRg(AKY5KAT(Luu, 's')))
+      (113 % (hxA0) / 37) % ((Luu = 'v'));
+  }
+  if (JlR5oLL('u'))
+    {
+      {
+        while ((u9 = hxA0))
+          (TDhO((hxA0 = 128)));
+        if (TDhO('a' / 254 / hxA0))
+          return (ol = (91));
+      }
+      return Luu;
+    }
+  {
+    'n';
+    {
+    }
+  }
+  main();
+  {
+    {
+      do {
+        Luu;
+      } while (main());
+    }
+  }
 }

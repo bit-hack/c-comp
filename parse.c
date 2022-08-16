@@ -307,7 +307,8 @@ bool pExprPrimary() {
     if (tFound(TOK_LPAREN)) {
       pExprCall(sym);
       return false;
-    } else {
+    }
+    else {
       // place symbol value on the stack
       sPushSymbol(sym);
       return true;
@@ -372,7 +373,8 @@ bool pExpr(int min_prec) {
       if (!lvalue) {
         fatal("%u: error: assignment requires lvalue", lLine);
       }
-    } else {
+    }
+    else {
       if (lvalue) {
         cEmit0(INS_DEREF);
       }
@@ -412,14 +414,15 @@ void pStmtIf() {
 
   pStmt();                        // <stmt>
 
-  int L1 = cEmit1(INS_JMP, -1);
-  cPatch(L0, cCodeLen);
-
   if (tFound(TOK_ELSE)) {         // else
+    int L1 = cEmit1(INS_JMP, -1);
+    cPatch(L0, cCodeLen);
     pStmt();                      // <stmt>
+    cPatch(L1, cCodeLen);
   }
-
-  cPatch(L1, cCodeLen);
+  else {
+    cPatch(L0, cCodeLen);
+  }
 }
 
 void pStmtWhile() {
@@ -492,6 +495,7 @@ void pStmt() {
   // expression
   pExpr(1);
   tExpect(TOK_SEMI);
+  cEmit0(INS_DROP);
 }
 
 void pParseGlobal(type_t type, symbol_t sym) {
@@ -631,6 +635,7 @@ void dasm() {
     DASM0(INS_RETURN, "RETURN");
     DASM1(INS_JMP,    "JMP");
     DASM1(INS_JEQ,    "JEQ");
+    DASM0(INS_DROP,   "DROP");
     default:
       fatal("Unknown instruction %u at %u", ins, i);
     }

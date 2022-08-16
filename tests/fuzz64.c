@@ -1,80 +1,62 @@
 char CbB;
 int DTTuYQT6(char wI, char OBaFGZpc) {
+  'v';
   {
-    if (22)
-      while (OBaFGZpc)
-        putchar('t');
-    {
-    }
-  }
-  if (DTTuYQT6(OBaFGZpc, 191) + CbB)
-    wI;
-  putchar('t');
-  putchar('k');
-  while ('t')
-    'p';
-}
-int ZSCn74() {
-  char Evn;
-  {
-    {
-      putchar('a');
-      if ((Evn = 'f'))
-        Evn;
-    }
-    Evn;
-  }
-  putchar('y');
-  do {
-    putchar('c');
-  } while ((CbB = (CbB = 241)));
-  do {
-    (Evn = (47));
-  } while ((Evn));
-  {
-    {
-    }
     do {
-      {
-        DTTuYQT6('p', Evn);
+      if ('s' * (226 + 214))
         do {
-          putchar('g');
-        } while ((CbB = (Evn = ('o'))));
-      }
-    } while ((CbB = ZSCn74()));
-    (Evn = CbB);
+          return ((OBaFGZpc = 92));
+        } while (124 || 't');
+    } while (OBaFGZpc);
+    while (('s') && DTTuYQT6('j', 'w') - DTTuYQT6(OBaFGZpc, 20))
+      (wI = 'f');
   }
+  while (wI)
+    wI;
+  DTTuYQT6(208, CbB);
+  if ((OBaFGZpc = 241))
+    CbB;
 }
-int m8vbZj(char lgpl) {
-  char dy4b_is3;
-  DTTuYQT6(lgpl, (dy4b_is3));
+int yq3CLiN(char Zn0wC) {
+  int jJ2wFajO;
+  char P1JjJ3U;
+  char B3slRN0d;
   do {
-    return (254) && (ZSCn74());
-  } while (lgpl);
-  if ((CbB = (dy4b_is3) % ZSCn74()))
-    do {
-      if ('f' - 183 || (lgpl = ZSCn74()))
-        (dy4b_is3 = dy4b_is3);
-    } while (((dy4b_is3)));
+    'f';
+  } while ('t');
+}
+int s49f() {
+  int V_i;
+  int SS;
+  char Yob;
+  {
+    return s49f();
+    while ((254))
+      return yq3CLiN(Yob);
+  }
+  (Yob = (SS) % yq3CLiN('r' || 54));
+  {
+    while (yq3CLiN((Yob = (CbB = V_i))))
+      do {
+        while (141)
+          218;
+      } while (DTTuYQT6(165, yq3CLiN((V_i = 200))));
+    {
+      do {
+        211;
+      } while (DTTuYQT6('y', 'b'));
+      do {
+        (CbB = (SS = CbB * 214) && V_i);
+      } while ('c');
+      do {
+        do {
+          return 64;
+        } while ((V_i = 244 && (CbB = 213)));
+      } while (23);
+    }
+  }
 }
 int main() {
-  char l3;
-  char XIOlui2;
-  putchar('g');
-  {
-    return ((l3 = (CbB = XIOlui2)));
-    putchar('u');
-    {
-      101 && (XIOlui2 = (XIOlui2 * 214));
-      while (139)
-        do {
-          putchar('b');
-        } while (main());
-      (51);
-    }
-  }
-  if (CbB)
-    return (CbB = 244 && (CbB = 213));
-  putchar('d');
-  (CbB = 38) - l3 || CbB;
+  int aeeP9d;
+  int cYRT;
 }

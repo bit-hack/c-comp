@@ -5,10 +5,18 @@ int KldYaG() {
   40;
 }
 int main() {
-  {
-    putchar('w');
-    putchar('w');
-  }
-  putchar('i');
-  yhGt;
+  (yhGt);
+  do {
+    {
+      {
+      }
+      while (XbDxWkqr)
+        return (yhGt = (XbDxWkqr = ('m')));
+      do {
+        while (66)
+          return main();
+      } while ('k');
+    }
+  } while (((171 + XbDxWkqr)));
+  (XbDxWkqr = ((111) - (188)) / 'u');
 }

@@ -9,48 +9,85 @@ int fD(char P1F) {
   (P1F = ('j') - fD(118));
 }
 int IBFz() {
-  putchar('i');
-  putchar('e');
-  g_6r + 232;
-}
-int nDE4() {
-  J1;
-  putchar('a');
   {
+    return lH5i7;
   }
+  {
+    {
+      return QMW4;
+    }
+  }
+  rSzjt;
 }
-int ygdnPMo() {
+int OOL(int dQl6, int ygdnPMo) {
   char n2;
 }
 int sYl6y7Qn() {
   int I5Pen;
   char iP;
   char oe_o;
-  do {
-    (QMW4 = (Yv = (('l'))));
-  } while ('y');
+  if (lH5i7)
+    {
+      {
+        ('l');
+        do {
+          233;
+        } while (11);
+      }
+      {
+        (QMW4 = OOL(187, 'k')) || (iP = (lH5i7) + Yv);
+        (J1 = (rSzjt = 'd' / 'u')) / IBFz();
+      }
+    }
 }
-int B3(char IiU) {
-  putchar('l');
-  putchar('a');
-  putchar('m');
-  fD('o');
-}
-int main() {
-  int zLYiKE;
-  if ((J1 = (J1 = 'd' / 'u')))
-    do {
-      putchar('g');
-    } while (252);
-  if (3 / (g_6r = ((127) + (QMW4))))
-    putchar('v');
+int bN0rRP(char EqdnxB5) {
   {
-    putchar('k');
-    putchar('k');
-    while (147 - 110)
-      return 't';
+    while (sYl6y7Qn())
+      do {
+        do {
+          147;
+        } while (110);
+      } while (('t'));
+    do {
+      39;
+    } while ('j' || (J1 = 212));
+    {
+      {
+        while ((BDL = ('v') - (Yv)))
+          return IBFz();
+        (EqdnxB5 = 'k');
+      }
+      if ((((240))))
+        100;
+      if ('r')
+        do {
+          return IBFz();
+        } while ((J1 = lH5i7));
+    }
   }
   {
-    putchar('t');
+    while ((205) * 'k')
+      return lH5i7;
+  }
+  do {
+    while (sYl6y7Qn())
+      ((233)) - 'n';
+  } while ((246));
+}
+int lCd(int gtTch) {
+}
+int main() {
+  int cZZ;
+  char lyGTm;
+  'o';
+  {
+    63;
+    while (((J1 = (g_6r = (('f'))))))
+      while ((rSzjt = QMW4))
+        'w';
+  }
+  if ('t')
+    return 'c';
+  {
   }
 }

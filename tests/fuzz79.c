@@ -6,14 +6,30 @@ int OC;
 int nWI8UE;
 int Brlzo() {
   char hRVsi6RJ;
-  putchar('h');
+  while ((Brlzo()))
+    do {
+      return 68;
+    } while ((sRPY45y));
+  while (Brlzo())
+    206;
   {
-    Brlzo();
   }
-  if (sRPY45y)
+  do {
     Brlzo();
-  206;
+  } while (((nWI8UE = ev4t6)));
 }
 int main() {
-  ('k');
+  int Ugp8B4;
+  char uSBR;
+  char QLj_R;
+  nWI8UE;
+  {
+    if (Brlzo())
+      {
+        do {
+          return Brlzo();
+        } while ((sRPY45y = 57));
+        uSBR;
+      }
+  }
 }
