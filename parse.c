@@ -451,6 +451,9 @@ void pStmtReturn() {
 }
 
 void pStmtDo() {
+
+  int L0 = cCodeLen;
+
                           // do
   pStmt();                // <stmt>
   tExpect(TOK_WHILE);     // while
@@ -458,6 +461,9 @@ void pStmtDo() {
   pExpr(1);               // <expr>
   tExpect(TOK_RPAREN);    // )
   tExpect(TOK_SEMI);      // ;
+
+  cEmit1(INS_CONST, 0);
+  cEmit1(INS_JNEQ, L0);
 }
 
 void pStmt() {
@@ -635,6 +641,7 @@ void dasm() {
     DASM0(INS_RETURN, "RETURN");
     DASM1(INS_JMP,    "JMP");
     DASM1(INS_JEQ,    "JEQ");
+    DASM1(INS_JNEQ,   "JNEQ");
     DASM0(INS_DROP,   "DROP");
     default:
       fatal("Unknown instruction %u at %u", ins, i);
