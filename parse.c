@@ -501,6 +501,7 @@ void pStmt() {
   // expression
   pExpr(1);
   tExpect(TOK_SEMI);
+  // rvalue not used
   cEmit0(INS_DROP);
 }
 
@@ -667,8 +668,16 @@ int main(int argc, char **args) {
   // discard first read (lK0 invalid)
   lNext();
 
+// int L0 = cEmit1(INS_JMP, -1);
+
   // start parsing
   pParse();
+
+  // jump to main at start
+// int sym = sIntern("main");
+// int i = contains(sym, sFuncIndex, sFuncCount);
+// if (i < 0) { fatal("error: main() not defined"); }
+// cPatch(L0, sFuncPos[i]);
 
   dasm();
 
