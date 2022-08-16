@@ -212,7 +212,8 @@ void sFuncAdd(type_t type, symbol_t sym) {
   if (contains(sym, sFuncTable, sFuncCount) >= 0)
     fatal("%u: error: function already defined", lLine);
 
-  sFuncTable[sFuncCount] = sym;
+  sFuncTable[sFuncCount] = sym;       // save symbol
+  sFuncPos  [sFuncCount] = cCodeLen;  // code position
   sFuncCount++;
 }
 
@@ -248,50 +249,73 @@ bool tIsType() {
   }
 }
 
+// lookup a symbol and push its value onto the stack
+void sPushSymbol(symbol_t s) {
+  int i;
+  if ((i = contains(s, sLocalTable, sLocalCount)) >= 0) {
+    cEmit1(INS_GETAL, i);
+    return;
+  }
+  if ((i = contains(s, sArgTable, sArgCount)) >= 0) {
+    cEmit1(INS_GETAA, i);
+    return;
+  }
+  if ((i = contains(s, sGlobalTable, sGlobalCount)) >= 0) {
+    cEmit1(INS_GETAG, i);
+    return;
+  }
+  if ((i = contains(s, sFuncTable, sFuncCount)) >= 0) {
+    cEmit1(INS_CONST, sFuncPos[i]);
+    return;
+  }
+  fatal("%u: error: unknown identifier", lLine);
+}
+
 // consume a function call
 void pExprCall(symbol_t sym) {
+  int nargs = 0;
   while (!tFound(TOK_RPAREN)) {
     do {
       pExpr(1);
+      nargs++;
     } while (tFound(TOK_COMMA));
   }
+  sPushSymbol(sym);
+  cEmit0(INS_CALL);
 }
 
 // consume a primary expression
-void pExprPrimary() {
+// return true if lvalue else false
+bool pExprPrimary() {
   token_t n = tNext();
-
+  // parenthesized expression
   if (n == TOK_LPAREN) {
-    pExpr(1);
+    bool lvalue = pExpr(1);
     tExpect(TOK_RPAREN);
-    return;
+    return lvalue;
   }
-
+  // integer literal
   if (n == TOK_LITERAL) {
-    cEmit(n);
-    return;
+    cEmit1(INS_CONST, n);
+    return false;
   }
-
+  // idenfitier or function call
   if (n == TOK_SYMBOL) {
-
+    // get symbol
     symbol_t sym = sIntern(tSym);
-
+    // function call
     if (tFound(TOK_LPAREN)) {
       pExprCall(sym);
-      return;
+      return false;
+    } else {
+      // place symbol value on the stack
+      sPushSymbol(sym);
+      return true;
     }
-
-    // if (tFound(TOK_LBRACKET)) {
-    //   pExprSubscript(sym);
-    //   return;
-    // }
-
-    // place symbol value on the stack
-    cEmit(n);
-    return;
   }
 
-  fatal("%u: error: expected literal or name", lLine);
+  fatal("%u: error: expected literal or identifier", lLine);
+  return false;
 }
 
 // the precedence table
@@ -326,29 +350,47 @@ bool pIsOperator(token_t c) {
 }
 
 // precedence climbing expression parser
-void pExpr(int min_prec) {
-
+bool pExpr(int min_prec) {
+  bool lvalue;
   // lhs
-  pExprPrimary();
-
+  lvalue = pExprPrimary();
   // while our operator is equal or higher precidence
   while (1) {
     // look ahead for possible operators
     token_t op = tPeek();
     if (!pIsOperator(op)) {
-        return;
+        break;
     }
     if (pPrec(op) < min_prec) {
-        return;
+        break;
     }
     // consume operator
     tNext();
 
+    // dereference if needed
+    if (op == TOK_ASSIGN) {
+      if (!lvalue) {
+        fatal("%u: error: assignment requires lvalue", lLine);
+      }
+    } else {
+      if (lvalue) {
+        cEmit0(INS_DEREF);
+      }
+    }
+
     // rhs
     pExpr(pPrec(op));
 
-    cEmit(op);
+    // apply operator
+    cEmit0(op);
+    lvalue = false;
   }
+
+  // ensure evaluated expression is rvalue
+  if (lvalue) {
+    cEmit0(INS_DEREF);
+  }
+  return false;
 }
 
 type_t pType() {
@@ -356,10 +398,7 @@ type_t pType() {
   if (!tIsType()) {
     fatal("%u: error: type expected", lLine);
   }
-
-  // XXX: consume derefs
-
-  return type;  // XXX: todo
+  return type;
 }
 
 void pStmtIf() {
@@ -385,6 +424,7 @@ void pStmtReturn() {
                           // return
   pExpr(1);               // <expr>
   tExpect(TOK_SEMI);      // ;
+  cEmit0(INS_RETURN);
 }
 
 void pStmtDo() {
@@ -398,31 +438,26 @@ void pStmtDo() {
 }
 
 void pStmt() {
-
   // if statement
   if (tFound(TOK_IF)) {
     pStmtIf();
     return;
   }
-
   // return statement
   if (tFound(TOK_RETURN)) {
     pStmtReturn();
     return;
   }
-
   // while statement
   if (tFound(TOK_WHILE)) {
     pStmtWhile();
     return;
   }
-
   // do while statement
   if (tFound(TOK_DO)) {
     pStmtDo();
     return;
   }
-
   // compound statement
   if (tFound(TOK_LBRACE)) {
     while (!tFound(TOK_RBRACE)) {
@@ -430,12 +465,10 @@ void pStmt() {
     }
     return;
   }
-
   // empty statement
   if (tFound(TOK_SEMI)) {
     return;
   }
-
   // expression
   pExpr(1);
   tExpect(TOK_SEMI);
@@ -486,10 +519,17 @@ void pParseFunc(type_t type, symbol_t sym) {
     pParseLocal();
   }
 
+  // allocate space for locals
+  cEmit1(INS_ALLOC, sLocalCount);
+
   // parse statements
   while (!tFound(TOK_RBRACE)) {
     pStmt();
   }
+
+  // return from function
+  cEmit1(INS_CONST, 0);
+  cEmit0(INS_RETURN);
 }
 
 void pParse() {
@@ -512,15 +552,71 @@ void pParse() {
   }
 }
 
+// load the (address?) of an identifier onto the stack
 void cSymbolLoad(symbol_t sym) {
   // XXX: find and load symbol
 }
 
 // emit to output code stream
-void cEmit(int c) {
+void cEmit0(int ins) {
   if (cCodeLen >= NCODELEN)
     fatal("%u: error: code limit reached", lLine);
-  cCode[cCodeLen++] = c;
+  cCode[cCodeLen++] = ins;
+}
+
+// emit instruction and operand to code stream
+int cEmit1(int ins, int opr) {
+  cEmit0(ins);
+  cEmit0(opr);
+  return cCodeLen - 1;
+}
+
+void cPatch(int loc, int opr) {
+  cCode[loc] = opr;
+}
+
+#define DASM0(INS, NAME) \
+  case INS: printf("%2u  %s\n", i, NAME); i += 1; break;
+
+#define DASM1(INS, NAME) \
+  case INS: printf("%2u  %s %u\n", i, NAME, opr); i += 2; break;
+
+void dasm() {
+  int i=0;
+  while (i < cCodeLen) {
+    int ins = cCode[i+0];
+    int opr = cCode[i+1];
+    switch (ins) {
+    DASM0(INS_DEREF,  "DEREF");
+    DASM0(INS_CALL,   "CALL ");
+    DASM1(INS_CONST,  "CONST");
+    DASM1(INS_GETAG,  "GETAG");
+    DASM1(INS_GETAL,  "GETAL");
+    DASM1(INS_GETAA,  "GETAA");
+    DASM1(INS_ALLOC,  "ALLOC");
+    DASM0(TOK_ASSIGN, "ASSIGN");
+    DASM0(TOK_OR,     "OR");
+    DASM0(TOK_AND,    "AND");
+    DASM0(TOK_ADD,    "ADD");
+    DASM0(TOK_SUB,    "SUB");
+    DASM0(TOK_MUL,    "MUL");
+    DASM0(TOK_DIV,    "DIV");
+    DASM0(TOK_EQU,    "EQU");
+    DASM0(TOK_LOGOR,  "LOGOR");
+    DASM0(TOK_LOGAND, "LOGAND");
+    DASM0(TOK_BITOR,  "BITOR");
+    DASM0(TOK_MOD,    "MOD");
+    DASM0(TOK_LT,     "LT");
+    DASM0(TOK_GT,     "GT");
+    DASM0(TOK_LTEQU,  "LTEQU");
+    DASM0(TOK_GTEQU,  "GTEQU");
+    DASM0(TOK_NEQU,   "NEQU");
+    DASM0(TOK_LOGNOT, "LOGNOT");
+    DASM0(INS_RETURN, "RETURN");
+    default:
+      fatal("Unknown instruction %u at %u", ins, i);
+    }
+  }
 }
 
 int main(int argc, char **args) {
@@ -543,6 +639,8 @@ int main(int argc, char **args) {
 
   // start parsing
   pParse();
+
+  dasm();
 
   return 0;
 }
