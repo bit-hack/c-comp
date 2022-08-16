@@ -296,7 +296,7 @@ bool pExprPrimary() {
   }
   // integer literal
   if (n == TOK_LITERAL) {
-    cEmit1(INS_CONST, n);
+    cEmit1(INS_CONST, tSymValue);
     return false;
   }
   // idenfitier or function call
@@ -402,22 +402,42 @@ type_t pType() {
 }
 
 void pStmtIf() {
-                          // if
-  tExpect(TOK_LPAREN);    // (
-  pExpr(1);               // <expr>
-  tExpect(TOK_RPAREN);    // )
-  pStmt();                // <stmt>
-  if (tFound(TOK_ELSE)) { // else
-    pStmt();              // <stmt>
+                                  // if
+  tExpect(TOK_LPAREN);            // (
+  pExpr(1);                       // <expr>
+  tExpect(TOK_RPAREN);            // )
+
+  cEmit1(INS_CONST, 0);
+  int L0 = cEmit1(INS_JEQ, -1);
+
+  pStmt();                        // <stmt>
+
+  int L1 = cEmit1(INS_JMP, -1);
+  cPatch(L0, cCodeLen);
+
+  if (tFound(TOK_ELSE)) {         // else
+    pStmt();                      // <stmt>
   }
+
+  cPatch(L1, cCodeLen);
 }
 
 void pStmtWhile() {
+
+  int L0 = cCodeLen;
+
                           // while
   tExpect(TOK_LPAREN);    // (
   pExpr(1);               // <expr>
   tExpect(TOK_RPAREN);    // )
+
+  cEmit1(INS_CONST, 0);
+  int L1 = cEmit1(INS_JEQ, -1);
+
   pStmt();                // <stmt>
+
+  cEmit1(INS_JMP, L0);
+  cPatch(L1, cCodeLen);
 }
 
 void pStmtReturn() {
@@ -552,11 +572,6 @@ void pParse() {
   }
 }
 
-// load the (address?) of an identifier onto the stack
-void cSymbolLoad(symbol_t sym) {
-  // XXX: find and load symbol
-}
-
 // emit to output code stream
 void cEmit0(int ins) {
   if (cCodeLen >= NCODELEN)
@@ -571,6 +586,7 @@ int cEmit1(int ins, int opr) {
   return cCodeLen - 1;
 }
 
+// patch a previous operand
 void cPatch(int loc, int opr) {
   cCode[loc] = opr;
 }
@@ -613,6 +629,8 @@ void dasm() {
     DASM0(TOK_NEQU,   "NEQU");
     DASM0(TOK_LOGNOT, "LOGNOT");
     DASM0(INS_RETURN, "RETURN");
+    DASM1(INS_JMP,    "JMP");
+    DASM1(INS_JEQ,    "JEQ");
     default:
       fatal("Unknown instruction %u at %u", ins, i);
     }
