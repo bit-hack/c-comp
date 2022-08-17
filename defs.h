@@ -48,14 +48,10 @@
 #define INS_ALLOC   256 + 6   // allocate space for locals
 #define INS_RETURN  256 + 7   // return from function
 #define INS_JMP     256 + 8   // jump unconditional
-#define INS_JEQ     256 + 9   // jump if equal
-#define INS_JLT     256 + 10  // jump if less than
-#define INS_JLTE    256 + 11  // jump if less than or equal to
-#define INS_JNEQ    256 + 12  // jump if not equal
-#define INS_JGT     256 + 13  // jump if greater than
-#define INS_JGTE    256 + 14  // jump if greater than or equal to
-#define INS_DROP    256 + 15  // drop top of stack
-#define INS_SCALL   256 + 16  // system call
+#define INS_JZ      256 + 9   // jump if zero
+#define INS_JNZ     256 + 10  // jump if not zero
+#define INS_DROP    256 + 11  // drop top of stack
+#define INS_SCALL   256 + 12  // system call
 
 #define NFUNC       32
 #define NGLOBAL     32

@@ -434,62 +434,48 @@ void pStmtIf() {
   tExpect(TOK_LPAREN);            // (
   pExpr(1);                       // <expr>
   tExpect(TOK_RPAREN);            // )
-
-  cEmit1(INS_CONST, 0);
-  int L0 = cEmit1(INS_JEQ, -1);
-
+  int tf = cEmit1(INS_JZ, -1);    // ---> target false  (JZ)
   pStmt();                        // <stmt>
-
   if (tFound(TOK_ELSE)) {         // else
-    int L1 = cEmit1(INS_JMP, -1);
-    cPatch(L0, cPos());
+    int te = cEmit1(INS_JMP, -1); // ---> target end    (JMP)
+    cPatch(tf, cPos());           // <--- target false
     pStmt();                      // <stmt>
-    cPatch(L1, cPos());
+    cPatch(te, cPos());           // <--- target end
   }
   else {
-    cPatch(L0, cPos());
+    cPatch(tf, cPos());           // <--- target false
   }
 }
 
 void pStmtWhile() {
-
-  int L0 = cPos();
-
-                          // while
-  tExpect(TOK_LPAREN);    // (
-  pExpr(1);               // <expr>
-  tExpect(TOK_RPAREN);    // )
-
-  cEmit1(INS_CONST, 0);
-  int L1 = cEmit1(INS_JEQ, -1);
-
-  pStmt();                // <stmt>
-
-  cEmit1(INS_JMP, L0);
-  cPatch(L1, cPos());
+  int tt = cPos();                // <--- target top
+                                  // while
+  tExpect(TOK_LPAREN);            // (
+  pExpr(1);                       // <expr>
+  tExpect(TOK_RPAREN);            // )
+  int tf = cEmit1(INS_JZ, -1);    // ---> target false  (JZ)
+  pStmt();                        // <stmt>
+  cEmit1(INS_JMP, tt);            // ---> target top    (JMP)
+  cPatch(tf, cPos());             // <--- target false
 }
 
 void pStmtReturn() {
-                          // return
-  pExpr(1);               // <expr>
-  tExpect(TOK_SEMI);      // ;
+                                  // return
+  pExpr(1);                       // <expr>
+  tExpect(TOK_SEMI);              // ;
   cEmit1(INS_RETURN, sArgCount);
 }
 
 void pStmtDo() {
-
-  int L0 = cPos();
-
-                          // do
-  pStmt();                // <stmt>
-  tExpect(TOK_WHILE);     // while
-  tExpect(TOK_LPAREN);    // (
-  pExpr(1);               // <expr>
-  tExpect(TOK_RPAREN);    // )
-  tExpect(TOK_SEMI);      // ;
-
-  cEmit1(INS_CONST, 0);
-  cEmit1(INS_JNEQ, L0);
+  int tt = cPos();                // <--- target top
+                                  // do
+  pStmt();                        // <stmt>
+  tExpect(TOK_WHILE);             // while
+  tExpect(TOK_LPAREN);            // (
+  pExpr(1);                       // <expr>
+  tExpect(TOK_RPAREN);            // )
+  tExpect(TOK_SEMI);              // ;
+  cEmit1(INS_JNZ, tt);            // ---> target top  (JNZ)
 }
 
 void pStmt() {
@@ -647,6 +633,7 @@ void cPatch(int loc, int opr) {
 }
 
 // lookup a symbol and push its value onto the stack
+// note we do this inner to outer scope for shadowing
 void cPushSymbol(symbol_t s) {
   int i;
   if ((i = contains(s, sLocalTable, sLocalCount)) >= 0) {
@@ -665,10 +652,10 @@ void cPushSymbol(symbol_t s) {
 }
 
 #define DASM0(INS, NAME) \
-  case INS: printf("%2u  %s\n", i, NAME); i += 1; break;
+  case INS: printf("%2u  %-6s\n", i, NAME); i += 1; break;
 
 #define DASM1(INS, NAME) \
-  case INS: printf("%2u  %s %u\n", i, NAME, opr); i += 2; break;
+  case INS: printf("%2u  %-6s %u\n", i, NAME, opr); i += 2; break;
 
 void cDasm() {
   int i=0;
@@ -677,7 +664,7 @@ void cDasm() {
     int opr = cCode[i+1];
     switch (ins) {
     DASM0(INS_DEREF,  "DEREF");
-    DASM1(INS_CALL,   "CALL ");
+    DASM1(INS_CALL,   "CALL");
     DASM1(INS_CONST,  "CONST");
     DASM1(INS_GETAG,  "GETAG");
     DASM1(INS_GETAL,  "GETAL");
@@ -703,8 +690,8 @@ void cDasm() {
     DASM0(TOK_LOGNOT, "LOGNOT");
     DASM1(INS_RETURN, "RETURN");
     DASM1(INS_JMP,    "JMP");
-    DASM1(INS_JEQ,    "JEQ");
-    DASM1(INS_JNEQ,   "JNEQ");
+    DASM1(INS_JZ,     "JZ");
+    DASM1(INS_JNZ,    "JNZ");
     DASM0(INS_DROP,   "DROP");
     DASM1(INS_SCALL,  "SCALL");
     default:
