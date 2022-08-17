@@ -21,6 +21,7 @@ int      sSymLen;               // current length of symbol table
 symbol_t sFuncTable[NFUNC];     // function table
 int      sFuncPos  [NFUNC];     // function code offsets
 int      sFuncCount;            // number of functions
+int      sFuncArgs [NFUNC];     // function argument counts
 
 symbol_t sGlobalTable[NGLOBAL]; // global table
 int      sGlobalCount;          // number of globals
@@ -227,7 +228,7 @@ void sGlobalAdd(type_t type, symbol_t sym) {
 }
 
 // a new function is being declared
-void sFuncAdd(type_t type, symbol_t sym) {
+void sFuncAdd(type_t type, symbol_t sym, int nargs) {
   if (sFuncCount >= NFUNC)
     fatal("%u: error: function count limit reached", lLine);
   if (contains(sym, sFuncTable, sFuncCount) >= 0)
@@ -235,6 +236,7 @@ void sFuncAdd(type_t type, symbol_t sym) {
 
   sFuncTable[sFuncCount] = sym;     // save symbol
   sFuncPos  [sFuncCount] = cPos();  // code position
+  sFuncArgs [sFuncCount] = nargs;   // argument count
   sFuncCount++;
 }
 
@@ -269,10 +271,10 @@ bool sIsSyscall(symbol_t sym) {
 }
 
 // given a symbol return code position of function
-int sFindFuncPos(symbol_t sym) {
+int sFuncFind(symbol_t sym) {
   int pos = contains(sym, sFuncTable, sFuncCount);
   if (pos >= 0) {
-    return sFuncPos[pos];
+    return pos;
   }
   fatal("%u: error: unknown function", lLine);
   return 0;
@@ -284,20 +286,27 @@ int sFindFuncPos(symbol_t sym) {
 
 // consume a function call
 void pExprCall(symbol_t sym) {
-  int pos = 0;
   int nargs = 0;
+
   while (!tFound(TOK_RPAREN)) {
     do {
       pExpr(1);
       nargs++;
     } while (tFound(TOK_COMMA));
   }
+
   if (sIsSyscall(sym)) {
     cEmit1(INS_SCALL, sym);
   }
   else {
-    pos = sFindFuncPos(sym);
-    cEmit1(INS_CALL, pos);
+    int f = sFuncFind(sym);
+
+    // verify argument count is correct
+    if (nargs != sFuncArgs[f]) {
+      fatal("%u: error: function takes %u arguments", lLine, sFuncArgs[f]);
+    }
+
+    cEmit1(INS_CALL, sFuncPos[f]);
   }
 }
 
@@ -541,9 +550,6 @@ void pParseFunc(type_t type, symbol_t sym) {
   sArgCount   = 0;
   sLocalCount = 0;
 
-  // record new function
-  sFuncAdd(type, sym);
-
   // parse arguments
   if (!tFound(TOK_RPAREN)) {
     do {
@@ -554,6 +560,9 @@ void pParseFunc(type_t type, symbol_t sym) {
     } while (tFound(TOK_COMMA));
     tExpect(TOK_RPAREN);
   }
+
+  // record new function
+  sFuncAdd(type, sym, sArgCount);
 
   // check main takes no arguments
   if (sym == sSymMain) {
@@ -575,7 +584,9 @@ void pParseFunc(type_t type, symbol_t sym) {
   }
 
   // allocate space for locals
-  cEmit1(INS_ALLOC, sLocalCount);
+  if (sLocalCount) {
+    cEmit1(INS_ALLOC, sLocalCount);
+  }
 
   // parse statements
   while (!tFound(TOK_RBRACE)) {
@@ -650,10 +661,6 @@ void cPushSymbol(symbol_t s) {
     cEmit1(INS_GETAG, i);
     return;
   }
-//  if ((i = contains(s, sFuncTable, sFuncCount)) >= 0) {
-//    cEmit1(INS_CONST, sFuncPos[i]);
-//    return;
-//  }
   fatal("%u: error: unknown identifier", lLine);
 }
 
@@ -738,11 +745,8 @@ int main(int argc, char **args) {
 
   // patch in a call to main
   symbol_t sMain = sIntern("main");
-  int cMainPos = sFindFuncPos(sMain);
-  if (cMainPos < 0) {
-    fatal("error: main() not defined");
-  }
-  cPatch(L0, cMainPos);
+  int id = sFuncFind(sMain);
+  cPatch(L0, sFuncPos[id]);
 
   // disassemble instructions
   cDasm();
