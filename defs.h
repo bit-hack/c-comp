@@ -2,15 +2,12 @@
 
 #define TOK_EOF     0   // \0
 #define TOK_ASSIGN  1   // =
-#define TOK_OR      2   // |
-#define TOK_AND     3   // &
 #define TOK_ADD     4   // +
 #define TOK_SUB     5   // -
 #define TOK_MUL     6   // *
 #define TOK_DIV     7   // /
 #define TOK_INC     8   // ++
 #define TOK_DEC     9   // --
-#define TOK_EQU     10  // ==
 #define TOK_LOGOR   11  // ||
 #define TOK_BITOR   12  // |
 #define TOK_LOGAND  13  // &&
@@ -26,8 +23,10 @@
 #define TOK_GT      23  // >
 #define TOK_LTEQU   24  // <=
 #define TOK_GTEQU   25  // >=
-#define TOK_NEQU    26  // ==
-#define TOK_LOGNOT  27  // !=
+#define TOK_EQU     26  // ==
+#define TOK_NEQU    27  // !=
+#define TOK_LOGNOT  28  // !
+#define TOK_BITNOT  29  // ~
 #define TOK_SYMBOL  128
 #define TOK_LITERAL 129
 #define TOK_IF      130 // if

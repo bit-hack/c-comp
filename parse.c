@@ -690,13 +690,12 @@ void cDasm() {
     DASM1(INS_GETAA,  "GETAA");
     DASM1(INS_ALLOC,  "ALLOC");
     DASM0(TOK_ASSIGN, "ASSIGN");
-    DASM0(TOK_OR,     "OR");
-    DASM0(TOK_AND,    "AND");
     DASM0(TOK_ADD,    "ADD");
     DASM0(TOK_SUB,    "SUB");
     DASM0(TOK_MUL,    "MUL");
     DASM0(TOK_DIV,    "DIV");
     DASM0(TOK_EQU,    "EQU");
+    DASM0(TOK_NEQU,   "NEQU");
     DASM0(TOK_LOGOR,  "LOGOR");
     DASM0(TOK_LOGAND, "LOGAND");
     DASM0(TOK_BITOR,  "BITOR");
@@ -705,8 +704,6 @@ void cDasm() {
     DASM0(TOK_GT,     "GT");
     DASM0(TOK_LTEQU,  "LTEQU");
     DASM0(TOK_GTEQU,  "GTEQU");
-    DASM0(TOK_NEQU,   "NEQU");
-    DASM0(TOK_LOGNOT, "LOGNOT");
     DASM1(INS_RETURN, "RETURN");
     DASM1(INS_JMP,    "JMP");
     DASM1(INS_JZ,     "JZ");

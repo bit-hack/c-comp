@@ -53,8 +53,21 @@ void vInsAlu(int ins) {
   int lhs = vPop();
   int res = 0;
   switch (ins) {
-  case TOK_ADD: res = lhs + rhs; break;
-  case TOK_SUB: res = lhs - rhs; break;
+  case TOK_ADD:     res = lhs +  rhs; break;
+  case TOK_SUB:     res = lhs -  rhs; break;
+  case TOK_MUL:     res = lhs *  rhs; break;
+  case TOK_DIV:     res = lhs /  rhs; break;
+  case TOK_EQU:     res = lhs == rhs; break;
+  case TOK_NEQU:    res = lhs != rhs; break;
+  case TOK_LOGOR:   res = lhs || rhs; break;
+  case TOK_LOGAND:  res = lhs && rhs; break;
+  case TOK_BITOR:   res = lhs |  rhs; break;
+  case TOK_BITAND:  res = lhs &  rhs; break;
+  case TOK_MOD:     res = lhs %  rhs; break;
+  case TOK_LT:      res = lhs <  rhs; break;
+  case TOK_GT:      res = lhs >  rhs; break;
+  case TOK_LTEQU:   res = lhs <= rhs; break;
+  case TOK_GTEQU:   res = lhs >= rhs; break;
   }
   vPush(res);
 }
@@ -91,17 +104,17 @@ void vInsScall(int opr) {
 }
 
 void vReturn(int opr) {
-  // get return value
+  // pop return value
   int ret = vPop();
-  // discard locals
+  // remove all locals
   vStackPtr = vFP;
-  // jump to return address
+  // pop return address
   vPC = vPop();
-  // save old stack frame
+  // restore old stack frame
   vFP = vPop();
   // remove arguments
   vStackPtr -= opr;
-  // place return value on stack
+  // place return value back on stack
   vPush(ret);
 
   if (vFP == 0) {
@@ -118,13 +131,10 @@ void vStep() {
   case INS_DEREF:   vInsDeref();  return;
   case INS_DROP:    vPop();       return;
   case TOK_ASSIGN:  vAssign();    return;
-  case TOK_OR:      vInsAlu(ins); return;
-  case TOK_AND:     vInsAlu(ins); return;
   case TOK_ADD:     vInsAlu(ins); return;
   case TOK_SUB:     vInsAlu(ins); return;
   case TOK_MUL:     vInsAlu(ins); return;
   case TOK_DIV:     vInsAlu(ins); return;
-  case TOK_EQU:     vInsAlu(ins); return;
   case TOK_LOGOR:   vInsAlu(ins); return;
   case TOK_LOGAND:  vInsAlu(ins); return;
   case TOK_BITOR:   vInsAlu(ins); return;
@@ -133,8 +143,8 @@ void vStep() {
   case TOK_GT:      vInsAlu(ins); return;
   case TOK_LTEQU:   vInsAlu(ins); return;
   case TOK_GTEQU:   vInsAlu(ins); return;
+  case TOK_EQU:     vInsAlu(ins); return;
   case TOK_NEQU:    vInsAlu(ins); return;
-  case TOK_LOGNOT:  vInsAlu(ins); return;
   }
 
   int opr = cCode[ vPC++ ];
