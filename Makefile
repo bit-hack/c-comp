@@ -5,18 +5,23 @@ TEST_CFLAGS=\
  -Wno-implicit-function-declaration\
  -Wno-overflow
 
+.PHONY: all clean
+
+all: parse exec
+
 parse: parse.c util.c defs.h
-	# note: $@ is the rule name
 	gcc parse.c util.c ${CFLAGS} -o $@
 
+exec: exec.c defs.h
+	gcc exec.c ${CFLAGS} -o $@
+
+# note: the @ prefix stops echoing
 test: parse
-	# note: the @ prefix stops echoing
 	@for FILE in tests/*.c; do \
 		echo "Testing $$FILE"; \
 		gcc ${TEST_CFLAGS} $$FILE; \
 		./parse $$FILE; \
 	done
 
-.PHONY: clean
 clean:
-	rm -rf parse
+	rm -rf parse exec

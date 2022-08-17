@@ -67,17 +67,3 @@
 #define bool        int
 #define true        1
 #define false       0
-
-void  fatal      (char *msg, ...);
-bool  pExpr      (int v);
-void  pStmt      ();
-void  cEmit0     (int c);
-int   cEmit1     (int c, int opr);
-void  cPatch     (int loc, int opr);
-int   cPos       ();
-void  cPushSymbol(symbol_t s);
-bool  strmatch   (char *a, char *b);
-char *strskip    (char *c);
-char *strcopy    (char *dst, char *src);
-int   strint     (char *a);
-int   contains   (symbol_t find, symbol_t *arr, int count);

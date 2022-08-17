@@ -41,6 +41,24 @@ int      cCodeLen;              // output code written
 FILE    *inFile;                // input file
 
 //----------------------------------------------------------------------------
+// FORWARD DECLARATIONS
+//----------------------------------------------------------------------------
+
+void  fatal      (char *msg, ...);
+bool  pExpr      (int v);
+void  pStmt      ();
+void  cEmit0     (int c);
+int   cEmit1     (int c, int opr);
+void  cPatch     (int loc, int opr);
+int   cPos       ();
+void  cPushSymbol(symbol_t s);
+bool  strmatch   (char *a, char *b);
+char *strskip    (char *c);
+char *strcopy    (char *dst, char *src);
+int   strint     (char *a);
+int   contains   (symbol_t find, symbol_t *arr, int count);
+
+//----------------------------------------------------------------------------
 // LEXER
 //----------------------------------------------------------------------------
 
@@ -641,7 +659,8 @@ void cPushSymbol(symbol_t s) {
     return;
   }
   if ((i = contains(s, sArgTable, sArgCount)) >= 0) {
-    cEmit1(INS_GETAA, i);
+    // work backwards here to match stack indexing
+    cEmit1(INS_GETAA, (sArgCount - 1) - i);
     return;
   }
   if ((i = contains(s, sGlobalTable, sGlobalCount)) >= 0) {
@@ -725,17 +744,22 @@ int main(int argc, char **args) {
   // discard first read (lK0 invalid)
   lNext();
 
-  int L0 = cEmit1(INS_JMP, -1);
+  // code starts with globals and call to main
+  int globOpr = cEmit1(INS_ALLOC, -1);
+  int jmpMain = cEmit1(INS_CALL, -1);
 
   // start parsing
   pParse();
 
-  // patch in a call to main
-  symbol_t sMain = sIntern("main");
-  int id = sFuncFind(sMain);
-  cPatch(L0, sFuncPos[id]);
+  // patch in globals count
+  cPatch(globOpr, sGlobalCount);
 
-  // disassemble instructions
+  // patch call to main after parsing
+  symbol_t sMain = sIntern("main");
+  int idMain = sFuncFind(sMain);
+  cPatch(jmpMain, sFuncPos[idMain]);
+
+  // disassemble code
   cDasm();
 
   return 0;
