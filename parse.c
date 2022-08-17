@@ -31,10 +31,17 @@ int      sArgCount;             // number of arguments
 symbol_t sLocalTable[NLOCAL];   // locals table
 int      sLocalCount;           // number of locals
 
+symbol_t sSymPutchar;           // putchar system call symbol
+symbol_t sSymMain;              // main symbol
+
 int      cCode[NCODELEN];       // output code stream
 int      cCodeLen;              // output code written
 
 FILE    *inFile;                // input file
+
+//----------------------------------------------------------------------------
+// LEXER
+//----------------------------------------------------------------------------
 
 bool lIsWhiteSpace(char c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n';
@@ -178,6 +185,20 @@ bool tFound(token_t tok) {
   return (tPeek() == tok) ? (tNext(), true) : false;
 }
 
+// return true if current token is a type
+bool tIsType() {
+  switch (tToken) {
+  case TOK_CHAR:
+  case TOK_INT:
+  case TOK_VOID: return true;
+  default:       return false;
+  }
+}
+
+//----------------------------------------------------------------------------
+// SYMBOL TABLE
+//----------------------------------------------------------------------------
+
 // intern the string held in 'tSym'
 // add to symbol table if not present and return index
 int sIntern(char *name) {
@@ -212,8 +233,8 @@ void sFuncAdd(type_t type, symbol_t sym) {
   if (contains(sym, sFuncTable, sFuncCount) >= 0)
     fatal("%u: error: function already defined", lLine);
 
-  sFuncTable[sFuncCount] = sym;       // save symbol
-  sFuncPos  [sFuncCount] = cCodeLen;  // code position
+  sFuncTable[sFuncCount] = sym;     // save symbol
+  sFuncPos  [sFuncCount] = cPos();  // code position
   sFuncCount++;
 }
 
@@ -239,40 +260,31 @@ void sLocalAdd(type_t type, symbol_t sym) {
   sLocalCount++;
 }
 
-// return true if current token is a type
-bool tIsType() {
-  switch (tToken) {
-  case TOK_CHAR:
-  case TOK_INT:
-  case TOK_VOID: return true;
-  default:       return false;
+// check if a symbol is a system call
+bool sIsSyscall(symbol_t sym) {
+  if (sym == sSymPutchar) {
+    return true;
   }
+  return false;
 }
 
-// lookup a symbol and push its value onto the stack
-void sPushSymbol(symbol_t s) {
-  int i;
-  if ((i = contains(s, sLocalTable, sLocalCount)) >= 0) {
-    cEmit1(INS_GETAL, i);
-    return;
+// given a symbol return code position of function
+int sFindFuncPos(symbol_t sym) {
+  int pos = contains(sym, sFuncTable, sFuncCount);
+  if (pos >= 0) {
+    return sFuncPos[pos];
   }
-  if ((i = contains(s, sArgTable, sArgCount)) >= 0) {
-    cEmit1(INS_GETAA, i);
-    return;
-  }
-  if ((i = contains(s, sGlobalTable, sGlobalCount)) >= 0) {
-    cEmit1(INS_GETAG, i);
-    return;
-  }
-  if ((i = contains(s, sFuncTable, sFuncCount)) >= 0) {
-    cEmit1(INS_CONST, sFuncPos[i]);
-    return;
-  }
-  fatal("%u: error: unknown identifier", lLine);
+  fatal("%u: error: unknown function", lLine);
+  return 0;
 }
+
+//----------------------------------------------------------------------------
+// PARSER
+//----------------------------------------------------------------------------
 
 // consume a function call
 void pExprCall(symbol_t sym) {
+  int pos = 0;
   int nargs = 0;
   while (!tFound(TOK_RPAREN)) {
     do {
@@ -280,8 +292,13 @@ void pExprCall(symbol_t sym) {
       nargs++;
     } while (tFound(TOK_COMMA));
   }
-  sPushSymbol(sym);
-  cEmit0(INS_CALL);
+  if (sIsSyscall(sym)) {
+    cEmit1(INS_SCALL, sym);
+  }
+  else {
+    pos = sFindFuncPos(sym);
+    cEmit1(INS_CALL, pos);
+  }
 }
 
 // consume a primary expression
@@ -310,7 +327,7 @@ bool pExprPrimary() {
     }
     else {
       // place symbol value on the stack
-      sPushSymbol(sym);
+      cPushSymbol(sym);
       return true;
     }
   }
@@ -416,18 +433,18 @@ void pStmtIf() {
 
   if (tFound(TOK_ELSE)) {         // else
     int L1 = cEmit1(INS_JMP, -1);
-    cPatch(L0, cCodeLen);
+    cPatch(L0, cPos());
     pStmt();                      // <stmt>
-    cPatch(L1, cCodeLen);
+    cPatch(L1, cPos());
   }
   else {
-    cPatch(L0, cCodeLen);
+    cPatch(L0, cPos());
   }
 }
 
 void pStmtWhile() {
 
-  int L0 = cCodeLen;
+  int L0 = cPos();
 
                           // while
   tExpect(TOK_LPAREN);    // (
@@ -440,19 +457,19 @@ void pStmtWhile() {
   pStmt();                // <stmt>
 
   cEmit1(INS_JMP, L0);
-  cPatch(L1, cCodeLen);
+  cPatch(L1, cPos());
 }
 
 void pStmtReturn() {
                           // return
   pExpr(1);               // <expr>
   tExpect(TOK_SEMI);      // ;
-  cEmit0(INS_RETURN);
+  cEmit1(INS_RETURN, sArgCount);
 }
 
 void pStmtDo() {
 
-  int L0 = cCodeLen;
+  int L0 = cPos();
 
                           // do
   pStmt();                // <stmt>
@@ -538,6 +555,13 @@ void pParseFunc(type_t type, symbol_t sym) {
     tExpect(TOK_RPAREN);
   }
 
+  // check main takes no arguments
+  if (sym == sSymMain) {
+    if (sArgCount != 0) {
+      fatal("%u: error: main takes no arguments", lLine);
+    }
+  }
+
   // function body
   tExpect(TOK_LBRACE);
 
@@ -560,7 +584,7 @@ void pParseFunc(type_t type, symbol_t sym) {
 
   // return from function
   cEmit1(INS_CONST, 0);
-  cEmit0(INS_RETURN);
+  cEmit1(INS_RETURN, sArgCount);
 }
 
 void pParse() {
@@ -583,6 +607,15 @@ void pParse() {
   }
 }
 
+//----------------------------------------------------------------------------
+// CODEGEN
+//----------------------------------------------------------------------------
+
+// return current code stream position
+int cPos() {
+  return cCodeLen;
+}
+
 // emit to output code stream
 void cEmit0(int ins) {
   if (cCodeLen >= NCODELEN)
@@ -602,20 +635,42 @@ void cPatch(int loc, int opr) {
   cCode[loc] = opr;
 }
 
+// lookup a symbol and push its value onto the stack
+void cPushSymbol(symbol_t s) {
+  int i;
+  if ((i = contains(s, sLocalTable, sLocalCount)) >= 0) {
+    cEmit1(INS_GETAL, i);
+    return;
+  }
+  if ((i = contains(s, sArgTable, sArgCount)) >= 0) {
+    cEmit1(INS_GETAA, i);
+    return;
+  }
+  if ((i = contains(s, sGlobalTable, sGlobalCount)) >= 0) {
+    cEmit1(INS_GETAG, i);
+    return;
+  }
+//  if ((i = contains(s, sFuncTable, sFuncCount)) >= 0) {
+//    cEmit1(INS_CONST, sFuncPos[i]);
+//    return;
+//  }
+  fatal("%u: error: unknown identifier", lLine);
+}
+
 #define DASM0(INS, NAME) \
   case INS: printf("%2u  %s\n", i, NAME); i += 1; break;
 
 #define DASM1(INS, NAME) \
   case INS: printf("%2u  %s %u\n", i, NAME, opr); i += 2; break;
 
-void dasm() {
+void cDasm() {
   int i=0;
   while (i < cCodeLen) {
     int ins = cCode[i+0];
     int opr = cCode[i+1];
     switch (ins) {
     DASM0(INS_DEREF,  "DEREF");
-    DASM0(INS_CALL,   "CALL ");
+    DASM1(INS_CALL,   "CALL ");
     DASM1(INS_CONST,  "CONST");
     DASM1(INS_GETAG,  "GETAG");
     DASM1(INS_GETAL,  "GETAL");
@@ -639,18 +694,26 @@ void dasm() {
     DASM0(TOK_GTEQU,  "GTEQU");
     DASM0(TOK_NEQU,   "NEQU");
     DASM0(TOK_LOGNOT, "LOGNOT");
-    DASM0(INS_RETURN, "RETURN");
+    DASM1(INS_RETURN, "RETURN");
     DASM1(INS_JMP,    "JMP");
     DASM1(INS_JEQ,    "JEQ");
     DASM1(INS_JNEQ,   "JNEQ");
     DASM0(INS_DROP,   "DROP");
+    DASM1(INS_SCALL,  "SCALL");
     default:
       fatal("Unknown instruction %u at %u", ins, i);
     }
   }
 }
 
+//----------------------------------------------------------------------------
+// DRIVER
+//----------------------------------------------------------------------------
+
 int main(int argc, char **args) {
+
+  sSymPutchar = sIntern("putchar");
+  sSymMain    = sIntern("main");
 
   // line counting starts at 1
   lLine = 1;
@@ -668,18 +731,21 @@ int main(int argc, char **args) {
   // discard first read (lK0 invalid)
   lNext();
 
-// int L0 = cEmit1(INS_JMP, -1);
+  int L0 = cEmit1(INS_JMP, -1);
 
   // start parsing
   pParse();
 
-  // jump to main at start
-// int sym = sIntern("main");
-// int i = contains(sym, sFuncIndex, sFuncCount);
-// if (i < 0) { fatal("error: main() not defined"); }
-// cPatch(L0, sFuncPos[i]);
+  // patch in a call to main
+  symbol_t sMain = sIntern("main");
+  int cMainPos = sFindFuncPos(sMain);
+  if (cMainPos < 0) {
+    fatal("error: main() not defined");
+  }
+  cPatch(L0, cMainPos);
 
-  dasm();
+  // disassemble instructions
+  cDasm();
 
   return 0;
 }
