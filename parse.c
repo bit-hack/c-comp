@@ -44,7 +44,7 @@ FILE    *inFile;                // input file
 // FORWARD DECLARATIONS
 //----------------------------------------------------------------------------
 
-bool  pExpr      (int v);
+bool  pExpr      (int v, bool rvalueReq);
 void  pStmt      ();
 void  cEmit0     (int c);
 int   cEmit1     (int c, int opr);
@@ -324,7 +324,7 @@ void pExprCall(symbol_t sym) {
 
   while (!tFound(TOK_RPAREN)) {
     do {
-      pExpr(1);
+      pExpr(1, true);
       nargs++;
     } while (tFound(TOK_COMMA));
   }
@@ -350,7 +350,7 @@ bool pExprPrimary() {
   token_t n = tNext();
   // parenthesized expression
   if (n == TOK_LPAREN) {
-    bool lvalue = pExpr(1);
+    bool lvalue = pExpr(1, false);
     tExpect(TOK_RPAREN);
     return lvalue;
   }
@@ -411,7 +411,7 @@ bool pIsOperator(token_t c) {
 }
 
 // precedence climbing expression parser
-bool pExpr(int min_prec) {
+bool pExpr(int minPrec, bool rvalueReq) {
   bool lvalue;
   // lhs
   lvalue = pExprPrimary();
@@ -422,7 +422,7 @@ bool pExpr(int min_prec) {
     if (!pIsOperator(op)) {
         break;
     }
-    if (pPrec(op) < min_prec) {
+    if (pPrec(op) < minPrec) {
         break;
     }
     // consume operator
@@ -441,18 +441,19 @@ bool pExpr(int min_prec) {
     }
 
     // rhs
-    pExpr(pPrec(op));
+    pExpr(pPrec(op), true);
 
     // apply operator
     cEmit0(op);
     lvalue = false;
   }
 
-  // ensure evaluated expression is rvalue
-  if (lvalue) {
+  // ensure evaluated expression is rvalue if required
+  if (lvalue && rvalueReq) {
+    lvalue = false;
     cEmit0(INS_DEREF);
   }
-  return false;
+  return lvalue;
 }
 
 type_t pType() {
@@ -466,7 +467,7 @@ type_t pType() {
 void pStmtIf() {
                                   // if
   tExpect(TOK_LPAREN);            // (
-  pExpr(1);                       // <expr>
+  pExpr(1, true);                 // <expr>
   tExpect(TOK_RPAREN);            // )
   int tf = cEmit1(INS_JZ, -1);    // ---> target false  (JZ)
   pStmt();                        // <stmt>
@@ -485,7 +486,7 @@ void pStmtWhile() {
   int tt = cPos();                // <--- target top
                                   // while
   tExpect(TOK_LPAREN);            // (
-  pExpr(1);                       // <expr>
+  pExpr(1, true);                 // <expr>
   tExpect(TOK_RPAREN);            // )
   int tf = cEmit1(INS_JZ, -1);    // ---> target false  (JZ)
   pStmt();                        // <stmt>
@@ -495,7 +496,7 @@ void pStmtWhile() {
 
 void pStmtReturn() {
                                   // return
-  pExpr(1);                       // <expr>
+  pExpr(1, true);                 // <expr>
   tExpect(TOK_SEMI);              // ;
   cEmit1(INS_RETURN, sArgCount);
 }
@@ -506,7 +507,7 @@ void pStmtDo() {
   pStmt();                        // <stmt>
   tExpect(TOK_WHILE);             // while
   tExpect(TOK_LPAREN);            // (
-  pExpr(1);                       // <expr>
+  pExpr(1, true);                 // <expr>
   tExpect(TOK_RPAREN);            // )
   tExpect(TOK_SEMI);              // ;
   cEmit1(INS_JNZ, tt);            // ---> target top  (JNZ)
@@ -545,7 +546,7 @@ void pStmt() {
     return;
   }
   // expression
-  pExpr(1);
+  pExpr(1, true);
   tExpect(TOK_SEMI);
   // rvalue not used
   cEmit0(INS_DROP);
