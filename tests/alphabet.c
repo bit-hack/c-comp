@@ -1,3 +1,6 @@
+// little test of a syscall to check we can print
+// out the alphabet
+
 int main() {
 
     int i;

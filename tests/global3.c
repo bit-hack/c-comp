@@ -1,3 +1,6 @@
+// two global decls and two assignments
+// check we return 0
+
 int g0;
 int g1;
 

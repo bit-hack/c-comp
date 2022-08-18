@@ -1,3 +1,5 @@
+// call a number of functions with arguments
+
 int func1(int a) {
     return a;
 }

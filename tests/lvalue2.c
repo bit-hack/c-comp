@@ -1,4 +1,6 @@
 int main() {
     int a;
-    return a + 1;
+    // a should remain an lvalue and be assignable
+    (a) = 12;
+    return a;
 }

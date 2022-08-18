@@ -27,4 +27,4 @@ test: parse
 	done
 
 clean:
-	rm -rf parse exec
+	rm -rf parse exec dasm a.out

@@ -1,3 +1,5 @@
+// check we can parse nested while loops
+
 int main() {
     if (1) {
         while (2) {

@@ -1,3 +1,5 @@
+// two locals, two assignments, returns 1
+
 int main() {
 
     int t1;

@@ -1,3 +1,5 @@
+/* check multi line comments */
+
 /* wow */
 int
 /*

@@ -1,3 +1,5 @@
+// check function call argument is returned
+
 int test(int a) {
     return a;
 }

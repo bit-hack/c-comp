@@ -1,3 +1,6 @@
+// a little more complex test using recursion and
+// syscalls to print an integer number
+
 int number(int v) {
     int x;
     x = v % 10;

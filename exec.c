@@ -115,10 +115,13 @@ void vInsReturn(int opr) {
   }
 }
 
-void vInsAlloc(int opr) {
-  vStackPtr += opr;
+void vInsAlloc(int opr) {  
   if (vStackPtr >= STACKLEN) {
     fatal("error: stack overflow");
+  }
+  // zero stack and enlarge
+  for (int i=0; i<opr; ++i) {
+    vStack[vStackPtr++] = 0;
   }
 }
 
@@ -190,6 +193,10 @@ int main(int argc, char **args) {
       dasm(cCode + vPC, vPC);
     }
     vStep();
+  }
+
+  if (i < 0) {
+    fatal("error: program did not complete");
   }
 
   return 0;

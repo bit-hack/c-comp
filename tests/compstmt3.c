@@ -1,3 +1,5 @@
+// check back to back compound statements
+
 int main() {
     {
     }
