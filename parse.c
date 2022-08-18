@@ -348,6 +348,7 @@ void pExprCall(symbol_t sym) {
 // return true if lvalue else false
 bool pExprPrimary() {
   token_t n = tNext();
+
   // parenthesized expression
   if (n == TOK_LPAREN) {
     bool lvalue = pExpr(1, false);
@@ -410,11 +411,64 @@ bool pIsOperator(token_t c) {
   return pPrec(c) > 0;
 }
 
+// check for any unary ops
+token_t pUnaryOpCheck() {
+  if (tFound(TOK_MUL))    return TOK_MUL;
+  if (tFound(TOK_BITAND)) return TOK_BITAND;
+  if (tFound(TOK_SUB))    return TOK_SUB;
+  return 0;
+}
+
+// return true if lvalue or false if rvalue
+bool pUnaryOpApply(bool lvalue, token_t op) {
+
+  // dereference
+  if (op == TOK_MUL) {
+    // convert to rvalue
+    if (lvalue) {
+      cEmit0(INS_DEREF);
+    }
+
+#if 1
+    // XXX: dont apply the dereference just say its an lvalue?
+    return true;
+#else
+    // apply the actual dereference
+    cEmit0(INS_DEREF);
+    return false;
+#endif
+  }
+
+  // address of
+  if (op == TOK_BITAND) {
+    if (!lvalue) {
+      fatal("%u: error: address of requires lvalue", lLine);
+    }
+    // just treat it as an rvalue now
+    return false;
+  }
+
+  // unary minus
+  if (op == TOK_SUB) {
+    fatal("%u: error: unary minus not implemented", lLine);
+  }
+
+  return lvalue;
+}
+
 // precedence climbing expression parser
 bool pExpr(int minPrec, bool rvalueReq) {
   bool lvalue;
+
+  // check if we have any unary ops to consume
+  token_t unOp = pUnaryOpCheck();
+
   // lhs
   lvalue = pExprPrimary();
+
+  // apply any unary op, if we found one
+  lvalue = pUnaryOpApply(lvalue, unOp);
+
   // while our operator is equal or higher precidence
   while (1) {
     // look ahead for possible operators
@@ -461,6 +515,15 @@ type_t pType() {
   if (!tIsType()) {
     fatal("%u: error: type expected", lLine);
   }
+
+  // consume pointers
+  int nderef = 0;
+  while (tFound(TOK_MUL)) {
+    ++nderef;
+  }
+
+  // XXX: munge into a packed int?
+
   return type;
 }
 
