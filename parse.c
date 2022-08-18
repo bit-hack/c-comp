@@ -35,8 +35,8 @@ int      sLocalCount;           // number of locals
 symbol_t sSymPutchar;           // putchar system call symbol
 symbol_t sSymMain;              // main symbol
 
-int      cCode[NCODELEN];       // output code stream
-int      cCodeLen;              // output code written
+int      cCode[NCODELEN];       // code stream
+int      cCodeLen;              // code length
 
 FILE    *inFile;                // input file
 
@@ -44,7 +44,6 @@ FILE    *inFile;                // input file
 // FORWARD DECLARATIONS
 //----------------------------------------------------------------------------
 
-void  fatal      (char *msg, ...);
 bool  pExpr      (int v);
 void  pStmt      ();
 void  cEmit0     (int c);
@@ -670,52 +669,6 @@ void cPushSymbol(symbol_t s) {
   fatal("%u: error: unknown identifier", lLine);
 }
 
-#define DASM0(INS, NAME) \
-  case INS: printf("%2u  %-6s\n", i, NAME); i += 1; break;
-
-#define DASM1(INS, NAME) \
-  case INS: printf("%2u  %-6s %u\n", i, NAME, opr); i += 2; break;
-
-void cDasm() {
-  int i=0;
-  while (i < cCodeLen) {
-    int ins = cCode[i+0];
-    int opr = cCode[i+1];
-    switch (ins) {
-    DASM0(INS_DEREF,  "DEREF");
-    DASM1(INS_CALL,   "CALL");
-    DASM1(INS_CONST,  "CONST");
-    DASM1(INS_GETAG,  "GETAG");
-    DASM1(INS_GETAL,  "GETAL");
-    DASM1(INS_GETAA,  "GETAA");
-    DASM1(INS_ALLOC,  "ALLOC");
-    DASM0(TOK_ASSIGN, "ASSIGN");
-    DASM0(TOK_ADD,    "ADD");
-    DASM0(TOK_SUB,    "SUB");
-    DASM0(TOK_MUL,    "MUL");
-    DASM0(TOK_DIV,    "DIV");
-    DASM0(TOK_EQU,    "EQU");
-    DASM0(TOK_NEQU,   "NEQU");
-    DASM0(TOK_LOGOR,  "LOGOR");
-    DASM0(TOK_LOGAND, "LOGAND");
-    DASM0(TOK_BITOR,  "BITOR");
-    DASM0(TOK_MOD,    "MOD");
-    DASM0(TOK_LT,     "LT");
-    DASM0(TOK_GT,     "GT");
-    DASM0(TOK_LTEQU,  "LTEQU");
-    DASM0(TOK_GTEQU,  "GTEQU");
-    DASM1(INS_RETURN, "RETURN");
-    DASM1(INS_JMP,    "JMP");
-    DASM1(INS_JZ,     "JZ");
-    DASM1(INS_JNZ,    "JNZ");
-    DASM0(INS_DROP,   "DROP");
-    DASM1(INS_SCALL,  "SCALL");
-    default:
-      fatal("Unknown instruction %u at %u", ins, i);
-    }
-  }
-}
-
 //----------------------------------------------------------------------------
 // DRIVER
 //----------------------------------------------------------------------------
@@ -756,8 +709,8 @@ int main(int argc, char **args) {
   int idMain = sFuncFind(sMain);
   cPatch(jmpMain, sFuncPos[idMain]);
 
-  // disassemble code
-  cDasm();
+  // output code stream
+  fwrite(cCode, 4, cCodeLen, stdout);
 
   return 0;
 }

@@ -66,3 +66,6 @@
 #define bool        int
 #define true        1
 #define false       0
+
+void fatal(char *msg, ...);
+int  dasm (int *cCode, int loc);

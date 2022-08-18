@@ -8,23 +8,14 @@
 
 #define FRAMESIZE 2         // old FP, PC
 
-int cCode[NCODELEN];        // output code stream
-int cCodeLen;               // output code written
+int cCode[NCODELEN];        // code stream
+int cCodeLen;               // code length
 
 int vStack[STACKLEN];       // evaluation stack
 int vStackPtr;              // stack pointer
 
 int vPC;                    // program counter 
 int vFP;                    // frame pointer
-
-void fatal(char *msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  vfprintf(stderr, msg, args);
-  fprintf(stderr, "\n");
-  va_end(args);
-  exit(1);
-}
 
 void vPush(int v) {
   if (vStackPtr >= STACKLEN) {
@@ -88,19 +79,8 @@ void vInsCall(int opr) {
   vPush(vPC);
   // jump to function
   vPC = opr;
-}
-
-void vInsAlloc(int opr) {
-  vStackPtr += opr;
-  if (vStackPtr >= STACKLEN) {
-    fatal("error: stack overflow");
-  }
-}
-
-void vInsScall(int opr) {
-  if (opr == 0) {
-    // putchar()
-  }
+  // start new stack frame
+  vFP = vStackPtr;
 }
 
 void vReturn(int opr) {
@@ -118,7 +98,21 @@ void vReturn(int opr) {
   vPush(ret);
 
   if (vFP == 0) {
-    fatal("return from main");
+    int ret = vPop();
+    fatal("return from main (%u)", ret);
+  }
+}
+
+void vInsAlloc(int opr) {
+  vStackPtr += opr;
+  if (vStackPtr >= STACKLEN) {
+    fatal("error: stack overflow");
+  }
+}
+
+void vInsScall(int opr) {
+  if (opr == 0) {
+    // putchar()
   }
 }
 
@@ -169,9 +163,15 @@ void vStep() {
 
 int main() {
 
+  cCodeLen = fread(cCode, 4, NCODELEN, stdin);
+  if (ferror(stdin)) {
+    fatal("stdin error");
+  }
+
   // execution loop
-  int i=1000;
+  int i=50;
   while (i--) {
+    dasm(cCode + vPC, vPC);
     vStep();
   }
 

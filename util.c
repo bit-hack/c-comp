@@ -60,3 +60,47 @@ int contains(symbol_t find, symbol_t *arr, int count) {
   // not found
   return -1;
 }
+
+#define DASM0(INS, NAME) \
+  case INS: printf("%2u  %-6s\n", loc, NAME); return 1;
+
+#define DASM1(INS, NAME) \
+  case INS: printf("%2u  %-6s %u\n", loc, NAME, opr); return 2;
+
+int dasm(int *cCode, int loc) {
+  int ins = cCode[0];
+  int opr = cCode[1];
+  switch (ins) {
+  DASM0(INS_DEREF,  "DEREF");
+  DASM1(INS_CALL,   "CALL");
+  DASM1(INS_CONST,  "CONST");
+  DASM1(INS_GETAG,  "GETAG");
+  DASM1(INS_GETAL,  "GETAL");
+  DASM1(INS_GETAA,  "GETAA");
+  DASM1(INS_ALLOC,  "ALLOC");
+  DASM0(TOK_ASSIGN, "ASSIGN");
+  DASM0(TOK_ADD,    "ADD");
+  DASM0(TOK_SUB,    "SUB");
+  DASM0(TOK_MUL,    "MUL");
+  DASM0(TOK_DIV,    "DIV");
+  DASM0(TOK_EQU,    "EQU");
+  DASM0(TOK_NEQU,   "NEQU");
+  DASM0(TOK_LOGOR,  "LOGOR");
+  DASM0(TOK_LOGAND, "LOGAND");
+  DASM0(TOK_BITOR,  "BITOR");
+  DASM0(TOK_MOD,    "MOD");
+  DASM0(TOK_LT,     "LT");
+  DASM0(TOK_GT,     "GT");
+  DASM0(TOK_LTEQU,  "LTEQU");
+  DASM0(TOK_GTEQU,  "GTEQU");
+  DASM1(INS_RETURN, "RETURN");
+  DASM1(INS_JMP,    "JMP");
+  DASM1(INS_JZ,     "JZ");
+  DASM1(INS_JNZ,    "JNZ");
+  DASM0(INS_DROP,   "DROP");
+  DASM1(INS_SCALL,  "SCALL");
+  default:
+    fatal("Unknown instruction %u at %u", ins, loc);
+    return 0;
+  }
+}
