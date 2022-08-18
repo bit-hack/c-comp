@@ -43,18 +43,29 @@ void vInsAlu(int ins) {
   int rhs = vPop();
   int lhs = vPop();
   int res = 0;
+
+  switch (ins) {
+  case TOK_MOD:
+  case TOK_DIV:
+    if (rhs == 0) {
+      fatal("error: division by zero");
+    }
+  }
+
   switch (ins) {
   case TOK_ADD:     res = lhs +  rhs; break;
   case TOK_SUB:     res = lhs -  rhs; break;
   case TOK_MUL:     res = lhs *  rhs; break;
-  case TOK_DIV:     res = lhs /  rhs; break;
   case TOK_EQU:     res = lhs == rhs; break;
   case TOK_NEQU:    res = lhs != rhs; break;
   case TOK_LOGOR:   res = lhs || rhs; break;
   case TOK_LOGAND:  res = lhs && rhs; break;
   case TOK_BITOR:   res = lhs |  rhs; break;
   case TOK_BITAND:  res = lhs &  rhs; break;
+
+  case TOK_DIV:     res = lhs /  rhs; break;
   case TOK_MOD:     res = lhs %  rhs; break;
+
   case TOK_LT:      res = lhs <  rhs; break;
   case TOK_GT:      res = lhs >  rhs; break;
   case TOK_LTEQU:   res = lhs <= rhs; break;
@@ -111,9 +122,12 @@ void vInsAlloc(int opr) {
 }
 
 void vInsScall(int opr) {
-  if (opr == 0) {
-    // putchar()
+  if (opr == /*putchar*/0) {
+    putchar(vPop());
+    vPush(0);
+    return;
   }
+  fatal("error: unknown systemcall");
 }
 
 void vStep() {
@@ -161,7 +175,7 @@ void vStep() {
   fatal("error: unknown instruction");
 }
 
-int main() {
+int main(int argc, char **args) {
 
   cCodeLen = fread(cCode, 4, NCODELEN, stdin);
   if (ferror(stdin)) {
@@ -169,9 +183,11 @@ int main() {
   }
 
   // execution loop
-  int i=50;
+  int i=2000;
   while (i--) {
-    dasm(cCode + vPC, vPC);
+    if (argc > 1) {
+      dasm(cCode + vPC, vPC);
+    }
     vStep();
   }
 

@@ -23,7 +23,7 @@ test: parse
 	@for FILE in tests/*.c; do \
 		echo "Testing $$FILE"; \
 		gcc ${TEST_CFLAGS} $$FILE; \
-		./parse $$FILE > /dev/null; \
+		./parse $$FILE | ./exec 1 > /dev/null; \
 	done
 
 clean:
