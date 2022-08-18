@@ -67,5 +67,11 @@
 #define true        1
 #define false       0
 
-void fatal(char *msg, ...);
-int  dasm (int *cCode, int loc);
+void  fatal   (char *msg, ...);
+int   dasm    (int *cCode, int loc);
+
+bool  strmatch(char *a, char *b);
+char *strskip (char *c);
+char *strcopy (char *dst, char *src);
+int   strint  (char *a);
+int   contains(symbol_t find, symbol_t *arr, int count);

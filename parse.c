@@ -51,11 +51,6 @@ int   cEmit1     (int c, int opr);
 void  cPatch     (int loc, int opr);
 int   cPos       ();
 void  cPushSymbol(symbol_t s);
-bool  strmatch   (char *a, char *b);
-char *strskip    (char *c);
-char *strcopy    (char *dst, char *src);
-int   strint     (char *a);
-int   contains   (symbol_t find, symbol_t *arr, int count);
 
 //----------------------------------------------------------------------------
 // LEXER
