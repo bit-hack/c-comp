@@ -51,6 +51,7 @@
 #define INS_JNZ     256 + 10  // jump if not zero
 #define INS_DROP    256 + 11  // drop top of stack
 #define INS_SCALL   256 + 12  // system call
+#define INS_NEG     256 + 13  // unary minus
 
 #define NFUNC       32
 #define NGLOBAL     32

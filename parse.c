@@ -428,15 +428,8 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
     if (lvalue) {
       cEmit0(INS_DEREF);
     }
-
-#if 1
-    // XXX: dont apply the dereference just say its an lvalue?
+    // dont apply a dereference just say its an lvalue
     return true;
-#else
-    // apply the actual dereference
-    cEmit0(INS_DEREF);
-    return false;
-#endif
   }
 
   // address of
@@ -450,7 +443,14 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
 
   // unary minus
   if (op == TOK_SUB) {
-    fatal("%u: error: unary minus not implemented", lLine);
+    // convert to rvalue
+    if (lvalue) {
+      cEmit0(INS_DEREF);
+    }
+    // negate the value
+    cEmit0(INS_NEG);
+    // its an rvalue now
+    return false;
   }
 
   return lvalue;

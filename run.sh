@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./parse $1 | ./exec
+./parse $1 | ./exec $2

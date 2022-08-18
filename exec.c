@@ -110,7 +110,7 @@ void vInsReturn(int opr) {
 
   if (vFP == 0) {
     int ret = vPop();
-    printf("return from main (%u)\n", ret);
+    printf("return from main (%d)\n", ret);
     exit(0);
   }
 }
@@ -140,23 +140,24 @@ void vStep() {
 
   // zero operand instructions
   switch (ins) {
-  case INS_DEREF:   vInsDeref();  return;
-  case INS_DROP:    vPop();       return;
-  case TOK_ASSIGN:  vInsAssign(); return;
-  case TOK_ADD:     vInsAlu(ins); return;
-  case TOK_SUB:     vInsAlu(ins); return;
-  case TOK_MUL:     vInsAlu(ins); return;
-  case TOK_DIV:     vInsAlu(ins); return;
-  case TOK_LOGOR:   vInsAlu(ins); return;
-  case TOK_LOGAND:  vInsAlu(ins); return;
-  case TOK_BITOR:   vInsAlu(ins); return;
-  case TOK_MOD:     vInsAlu(ins); return;
-  case TOK_LT:      vInsAlu(ins); return;
-  case TOK_GT:      vInsAlu(ins); return;
-  case TOK_LTEQU:   vInsAlu(ins); return;
-  case TOK_GTEQU:   vInsAlu(ins); return;
-  case TOK_EQU:     vInsAlu(ins); return;
-  case TOK_NEQU:    vInsAlu(ins); return;
+  case INS_DEREF:   vInsDeref();    return;
+  case INS_DROP:    vPop();         return;
+  case TOK_ASSIGN:  vInsAssign();   return;
+  case TOK_ADD:     vInsAlu(ins);   return;
+  case TOK_SUB:     vInsAlu(ins);   return;
+  case TOK_MUL:     vInsAlu(ins);   return;
+  case TOK_DIV:     vInsAlu(ins);   return;
+  case TOK_LOGOR:   vInsAlu(ins);   return;
+  case TOK_LOGAND:  vInsAlu(ins);   return;
+  case TOK_BITOR:   vInsAlu(ins);   return;
+  case TOK_MOD:     vInsAlu(ins);   return;
+  case TOK_LT:      vInsAlu(ins);   return;
+  case TOK_GT:      vInsAlu(ins);   return;
+  case TOK_LTEQU:   vInsAlu(ins);   return;
+  case TOK_GTEQU:   vInsAlu(ins);   return;
+  case TOK_EQU:     vInsAlu(ins);   return;
+  case TOK_NEQU:    vInsAlu(ins);   return;
+  case INS_NEG:     vPush(-vPop()); return;
   }
 
   int opr = cCode[ vPC++ ];
