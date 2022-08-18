@@ -75,6 +75,8 @@ char lNext() {
   int in = fgetc(inFile);
   lK0 = lK1;
   lK1 = (in >= 0) ? in : '\0';
+  // track new lines
+  lLine = (lK0 == '\n') ? (lLine + 1) : lLine;
   return lK0;
 }
 
@@ -113,14 +115,24 @@ token_t tNext() {
   while (true) {
     // consume whitespace
     while (lIsWhiteSpace(c)) {
-      lLine = (c == '\n') ? (lLine + 1) : lLine;
       c = lNext();
     }
-    // skip comments
+    // single line comments
     if (c == '/' && lFound('/')) {
       do {
         c = lNext();
       } while (c != '\0' && c != '\n');
+      continue;
+    }
+    // multi line comments
+    if (c == '/' && lFound('*')) {
+      while (true) {
+        c = lNext();
+        if (c == '\0' || (c == '*' && lFound('/'))) {
+          break;
+        }
+      }
+      c = lNext();
       continue;
     }
     break;
