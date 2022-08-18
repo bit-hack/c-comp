@@ -659,7 +659,7 @@ void cPushSymbol(symbol_t s) {
   }
   if ((i = contains(s, sArgTable, sArgCount)) >= 0) {
     // work backwards here to match stack indexing
-    cEmit1(INS_GETAA, (sArgCount - 1) - i);
+    cEmit1(INS_GETAA, sArgCount - i);
     return;
   }
   if ((i = contains(s, sGlobalTable, sGlobalCount)) >= 0) {

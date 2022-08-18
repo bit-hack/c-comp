@@ -63,13 +63,13 @@ void vInsAlu(int ins) {
   vPush(res);
 }
 
-void vAssign() {
+void vInsAssign() {
   int rvalue = vPop();
   int lvalue = vPop();
   if (lvalue < 0 || lvalue >= vStackPtr) {
     fatal("error: invalid lvalue address");
   }
-  vStack[lvalue] = rvalue;
+  vPush(vStack[lvalue] = rvalue);
 }
 
 void vInsCall(int opr) {
@@ -83,7 +83,7 @@ void vInsCall(int opr) {
   vFP = vStackPtr;
 }
 
-void vReturn(int opr) {
+void vInsReturn(int opr) {
   // pop return value
   int ret = vPop();
   // remove all locals
@@ -124,7 +124,7 @@ void vStep() {
   switch (ins) {
   case INS_DEREF:   vInsDeref();  return;
   case INS_DROP:    vPop();       return;
-  case TOK_ASSIGN:  vAssign();    return;
+  case TOK_ASSIGN:  vInsAssign(); return;
   case TOK_ADD:     vInsAlu(ins); return;
   case TOK_SUB:     vInsAlu(ins); return;
   case TOK_MUL:     vInsAlu(ins); return;
@@ -151,7 +151,7 @@ void vStep() {
   case INS_GETAL:   vPush(vFP + opr);               return;
   case INS_GETAA:   vPush(vFP - opr - FRAMESIZE);   return;
   case INS_ALLOC:   vInsAlloc(opr);                 return;
-  case INS_RETURN:  vReturn(opr);                   return;
+  case INS_RETURN:  vInsReturn(opr);                return;
   case INS_JMP:                      vPC = opr;     return;
   case INS_JZ:      if (vPop() == 0) vPC = opr;     return;
   case INS_JNZ:     if (vPop() != 0) vPC = opr;     return;
