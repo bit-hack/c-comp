@@ -110,10 +110,20 @@ token_t tNext() {
 
   char c = lNext();
 
-  // consume whitespace
-  while (lIsWhiteSpace(c)) {
-    lLine = (c == '\n') ? (lLine + 1) : lLine;
-    c = lNext();
+  while (true) {
+    // consume whitespace
+    while (lIsWhiteSpace(c)) {
+      lLine = (c == '\n') ? (lLine + 1) : lLine;
+      c = lNext();
+    }
+    // skip comments
+    if (c == '/' && lFound('/')) {
+      do {
+        c = lNext();
+      } while (c != '\0' && c != '\n');
+      continue;
+    }
+    break;
   }
 
   tSymLen = 0;
