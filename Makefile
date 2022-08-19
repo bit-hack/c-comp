@@ -19,8 +19,19 @@ dasm: dasm.c util.c defs.h
 	gcc dasm.c util.c ${CFLAGS} -o $@
 
 # note: the @ prefix stops echoing
-test: parse
+test: parse exec
 	@for FILE in tests/*.c; do \
+		echo "Testing $$FILE"; \
+		gcc $$FILE; \
+		./a.out; \
+		echo "ref  $$?"; \
+		./parse $$FILE | ./exec; \
+		echo "test $$?"; \
+	done
+
+# note: the @ prefix stops echoing
+fuzz: parse exec
+	@for FILE in fuzz/*.c; do \
 		echo "Testing $$FILE"; \
 		gcc ${TEST_CFLAGS} $$FILE; \
 		./parse $$FILE | ./exec 1 > /dev/null; \

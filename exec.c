@@ -114,8 +114,9 @@ void vInsReturn(int opr) {
 
   if (vFP == 0) {
     int ret = vPop();
-    printf("return from main (%d)\n", ret);
-    exit(0);
+    exit(ret);
+//    printf("return from main (%d)\n", ret);
+//    exit(0);
   }
 }
 

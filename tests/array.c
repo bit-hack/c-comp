@@ -3,5 +3,4 @@
 int glob[16];
 
 int main() {
-    int loc[16];
 }

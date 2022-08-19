@@ -15,8 +15,12 @@ int c() {
 }
 
 int main() {
+    int x;
+    int y;
+    int z;
     glob[1] = 1234;
-//    return a();
-//    return b(glob);
-    return c();
+    x = a();
+    y = b(glob);
+    z = c();
+    return x + y + z;
 }
