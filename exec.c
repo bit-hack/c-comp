@@ -17,6 +17,10 @@ int vStackPtr;              // stack pointer
 int vPC;                    // program counter 
 int vFP;                    // frame pointer
 
+int vPeek() {
+  return vStack[vStackPtr - 1];
+}
+
 void vPush(int v) {
   if (vStackPtr >= STACKLEN) {
     fatal("error: stack overflow");
@@ -191,7 +195,9 @@ int main(int argc, char **args) {
   int i=2000;
   while (i--) {
     if (argc > 1) {
+      printf("TOS=%-3u  | ", vPeek());
       dasm(cCode + vPC, vPC);
+      printf("\n");
     }
     vStep();
   }

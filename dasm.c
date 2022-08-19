@@ -17,6 +17,7 @@ int main() {
   int i=0;
   while (i < cCodeLen) {
     i += dasm(cCode + i, i);
+    printf("\n");
   }
 
   return 0;

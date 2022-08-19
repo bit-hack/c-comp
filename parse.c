@@ -399,7 +399,10 @@ bool pExprPrimary() {
     else {
       // place symbol value on the stack
       cPushSymbol(sym);
-      return !sIsArray(sym);
+      // arrays are treated as rvalues since we use their address directly
+      // and must be dereferenced before use. you also cant reassign an array.
+      return sIsArray(sym) ? false :  // rvalue
+                             true;    // lvalue
     }
   }
 
@@ -486,7 +489,13 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
   return lvalue;
 }
 
-void pSubscript() {
+// handle a subscript operator
+void pSubscript(bool lvalue) {
+  // to apply a subscript to something, it must be an rvalue or we will be
+  // modifying the wrong address.  dereference it to an rvalue first.
+  if (lvalue) {
+    cEmit0(INS_DEREF);
+  }
   pExpr(1, true);
   tExpect(TOK_RBRACK);
   cEmit0(TOK_ADD);
@@ -502,10 +511,11 @@ bool pExpr(int minPrec, bool rvalueReq) {
   // lhs
   lvalue = pExprPrimary();
 
-  // array subscript
+  // handle array subscript
   if (tFound(TOK_LBRACK)) {
-    pSubscript();
-    // a subscript will make an lvalue
+    pSubscript(lvalue);
+    // a subscript results in an lvalue.
+    // they have to so that assignments work as expected.
     lvalue = true;
   }
 

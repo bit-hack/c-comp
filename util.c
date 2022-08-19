@@ -62,10 +62,10 @@ int contains(symbol_t find, symbol_t *arr, int count) {
 }
 
 #define DASM0(INS, NAME) \
-  case INS: printf("%2u  %-6s\n", loc, NAME); return 1;
+  case INS: printf("%2u  %-6s", loc, NAME); return 1;
 
 #define DASM1(INS, NAME) \
-  case INS: printf("%2u  %-6s %u\n", loc, NAME, opr); return 2;
+  case INS: printf("%2u  %-6s %u", loc, NAME, opr); return 2;
 
 int dasm(int *cCode, int loc) {
   int ins = cCode[0];
