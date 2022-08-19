@@ -5,40 +5,46 @@
 
 #include "defs.h"
 
-char     lK0, lK1;              // input delay line (lK1 = lookahead)
-int      lLine;                 // currently lexed line number
+char     lK0, lK1;                 // input delay line (lK1 = lookahead)
+int      lLine;                    // currently lexed line number
 
-char     tSym[128];             // extracted currently parsed token
-int      tSymLen;               // current symbol length
-int      tSymValue;             // value if symbol is a literal
+char     tSym[128];                // extracted currently parsed token
+int      tSymLen;                  // current symbol length
+int      tSymValue;                // value if symbol is a literal
 
-token_t  tToken;                // last parsed token
-bool     tPeeked;               // a peek was performed
+token_t  tToken;                   // last parsed token
+bool     tPeeked;                  // a peek was performed
 
-char     sSymTab[SYMTABLEN];    // symbol table
-int      sSymLen;               // current length of symbol table
+char     sSymbolTable[SYMTABLEN];  // symbol table
+int      sSymbols;                 // current length of symbol table
 
-symbol_t sFuncTable[NFUNC];     // function table
-int      sFuncPos  [NFUNC];     // function code offsets
-int      sFuncCount;            // number of functions
-int      sFuncArgs [NFUNC];     // function argument counts
+int      sFuncs;                   // number of functions
+symbol_t sFuncTable[NFUNC];        // function table
+int      sFuncPos  [NFUNC];        // function code offsets
+int      sFuncArgs [NFUNC];        // function argument counts
+type_t   sFuncType [NFUNC];        // function return type
 
-symbol_t sGlobalTable[NGLOBAL]; // global table
-int      sGlobalCount;          // number of globals
+int      sGlobals;                 // number of globals
+symbol_t sGlobalTable[NGLOBAL];    // global table
+int      sGlobalOffs [NGLOBAL];    // global offsets
+type_t   sGlobalType [NGLOBAL];    // global type
+int      sGlobalSize;              // global size to alloc
 
-symbol_t sArgTable[NARG];       // argument table
-int      sArgCount;             // number of arguments
+int      sArgs;                    // number of arguments
+symbol_t sArgTable[NARG];          // argument table
+type_t   sArgType [NARG];          // argument type
 
-symbol_t sLocalTable[NLOCAL];   // locals table
-int      sLocalCount;           // number of locals
+int      sLocals;                  // number of locals
+symbol_t sLocalTable[NLOCAL];      // locals table
+type_t   sLocalType [NLOCAL];      // local type
 
-symbol_t sSymPutchar;           // putchar system call symbol
-symbol_t sSymMain;              // main symbol
+symbol_t sSymPutchar;              // putchar system call symbol
+symbol_t sSymMain;                 // main symbol
 
-int      cCode[NCODELEN];       // code stream
-int      cCodeLen;              // code length
+int      cCode[NCODELEN];          // code stream
+int      cCodeLen;                 // code length
 
-FILE    *inFile;                // input file
+FILE    *inFile;                   // input file
 
 //----------------------------------------------------------------------------
 // FORWARD DECLARATIONS
@@ -85,7 +91,7 @@ bool lFound(char c) {
   return (lK1 == c) ? (lNext(), true) : false;
 }
 
-#define CHECK(X, T) if (strmatch(tSym, X)) return T;
+#define CHECK(X, T) if (strMatch(tSym, X)) return T;
 token_t tKeywordCheck() {
   switch (tSym[0]) {
   case 'c': CHECK("char",   TOK_CHAR);   break;
@@ -148,7 +154,7 @@ token_t tNext() {
         break;
     }
     tSym[tSymLen] = '\0';
-    tSymValue = strint(tSym);
+    tSymValue = strToInt(tSym);
     return tToken = TOK_LITERAL;
   }
 
@@ -185,6 +191,8 @@ token_t tNext() {
   case '{':  return tToken = TOK_LBRACE;
   case '}':  return tToken = TOK_RBRACE;
   case '%':  return tToken = TOK_MOD;
+  case '[':  return tToken = TOK_LBRACK;
+  case ']':  return tToken = TOK_RBRACK;
   case '<':  return tToken = lFound('=') ? TOK_LTEQU  : TOK_LT;
   case '>':  return tToken = lFound('=') ? TOK_GTEQU  : TOK_GT;
   case '|':  return tToken = lFound('|') ? TOK_LOGOR  : TOK_BITOR;
@@ -211,7 +219,9 @@ token_t tPeek() {
 void tExpect(token_t tok) {
   token_t got = tNext();
   if (got != tok) {
-    fatal("%u: error: expecting token %u but got %u\n", lLine, tok, got);
+    char *e = tokName(tok);
+    char *g = tokName(got);
+    fatal("%u: error: expecting token '%s' but got '%s'", lLine, e, g);
   }
 }
 
@@ -238,62 +248,66 @@ bool tIsType() {
 // add to symbol table if not present and return index
 int sIntern(char *name) {
   // XXX: todo, check for symtab overflow
-  char *c = sSymTab;
+  char *c = sSymbolTable;
   int n = 0;
-  for (;n < sSymLen; ++n) {
-    if (strmatch(c, name)) {
+  for (;n < sSymbols; ++n) {
+    if (strMatch(c, name)) {
       return n;
     }
-    c = strskip(c);
+    c = strSkip(c);
   }
-  strcopy(c, name);
-  return sSymLen++;
+  strCopy(c, name);
+  return sSymbols++;
 }
 
 // a new global is being declared
 void sGlobalAdd(type_t type, symbol_t sym) {
-  if (sGlobalCount >= NGLOBAL)
+  if (sGlobals >= NGLOBAL)
     fatal("%u: error: global count limit reached", lLine);
-  if (contains(sym, sGlobalTable, sGlobalCount) >= 0)
+  if (contains(sym, sGlobalTable, sGlobals) >= 0)
     fatal("%u: error: global already defined", lLine);
 
-  sGlobalTable[sGlobalCount] = sym;
-  sGlobalCount++;
+  sGlobalTable[sGlobals] = sym;
+  sGlobalType [sGlobals] = type;
+  sGlobals++;
 }
 
 // a new function is being declared
 void sFuncAdd(type_t type, symbol_t sym, int nargs) {
-  if (sFuncCount >= NFUNC)
+  if (sFuncs >= NFUNC)
     fatal("%u: error: function count limit reached", lLine);
-  if (contains(sym, sFuncTable, sFuncCount) >= 0)
+  if (contains(sym, sFuncTable, sFuncs) >= 0)
     fatal("%u: error: function already defined", lLine);
 
-  sFuncTable[sFuncCount] = sym;     // save symbol
-  sFuncPos  [sFuncCount] = cPos();  // code position
-  sFuncArgs [sFuncCount] = nargs;   // argument count
-  sFuncCount++;
+  sFuncTable[sFuncs] = sym;     // save symbol
+  sFuncPos  [sFuncs] = cPos();  // code position
+  sFuncArgs [sFuncs] = nargs;   // argument count
+  sFuncType [sFuncs] = type;    // save type
+  sFuncs++;
 }
 
 // a new argument is being declared
 void sArgAdd(type_t type, symbol_t sym) {
-  if (sArgCount >= NARG)
+  if (sArgs >= NARG)
     fatal("%u: error: argument count limit reached", lLine);
-  if (contains(sym, sArgTable, sArgCount) >= 0)
+  if (contains(sym, sArgTable, sArgs) >= 0)
     fatal("%u: error: duplicate arguments", lLine);
 
-  sArgTable[sArgCount] = sym;
-  sArgCount++;
+  sArgTable[sArgs] = sym;
+  sArgType [sArgs] = type;
+  sArgs++;
 }
 
 // a new local has been declared
 void sLocalAdd(type_t type, symbol_t sym) {
-  if (sLocalCount >= NLOCAL)
+  if (sLocals >= NLOCAL)
     fatal("%u: error: local count limit reached", lLine);
-  if (contains(sym, sLocalTable, sLocalCount) >= 0)
+  if (contains(sym, sLocalTable, sLocals) >= 0)
     fatal("%u: error: local already defined", lLine);
 
-  sLocalTable[sLocalCount] = sym;
-  sLocalCount++;
+  sLocalTable[sLocals] = sym;
+  sLocalType [sLocals] = type;
+  sLocals++;
 }
 
 // check if a symbol is a system call
@@ -306,7 +320,7 @@ bool sIsSyscall(symbol_t sym) {
 
 // given a symbol return code position of function
 int sFuncFind(symbol_t sym) {
-  int pos = contains(sym, sFuncTable, sFuncCount);
+  int pos = contains(sym, sFuncTable, sFuncs);
   if (pos >= 0) {
     return pos;
   }
@@ -376,7 +390,9 @@ bool pExprPrimary() {
     }
   }
 
-  fatal("%u: error: expected literal or identifier", lLine);
+  char *got = tokName(n);
+  fatal("%u: error: expected literal or identifier but got '%s'",
+        lLine, got);
   return false;
 }
 
@@ -419,6 +435,7 @@ token_t pUnaryOpCheck() {
   return 0;
 }
 
+// apply a unary operation
 // return true if lvalue or false if rvalue
 bool pUnaryOpApply(bool lvalue, token_t op) {
 
@@ -510,10 +527,12 @@ bool pExpr(int minPrec, bool rvalueReq) {
   return lvalue;
 }
 
+// parse a type
 type_t pType() {
   token_t type = tNext();
   if (!tIsType()) {
-    fatal("%u: error: type expected", lLine);
+    char *c = tokName(type);
+    fatal("%u: error: type expected but found '%s'", lLine, c);
   }
 
   // consume pointers
@@ -527,6 +546,7 @@ type_t pType() {
   return type;
 }
 
+// parse an if statement
 void pStmtIf() {
                                   // if
   tExpect(TOK_LPAREN);            // (
@@ -545,6 +565,7 @@ void pStmtIf() {
   }
 }
 
+// parse a while statement
 void pStmtWhile() {
   int tt = cPos();                // <--- target top
                                   // while
@@ -557,13 +578,15 @@ void pStmtWhile() {
   cPatch(tf, cPos());             // <--- target false
 }
 
+// parse a return statement
 void pStmtReturn() {
                                   // return
   pExpr(1, true);                 // <expr>
   tExpect(TOK_SEMI);              // ;
-  cEmit1(INS_RETURN, sArgCount);
+  cEmit1(INS_RETURN, sArgs);
 }
 
+// parse a do while statement
 void pStmtDo() {
   int tt = cPos();                // <--- target top
                                   // do
@@ -576,6 +599,7 @@ void pStmtDo() {
   cEmit1(INS_JNZ, tt);            // ---> target top  (JNZ)
 }
 
+// parse a statement
 void pStmt() {
   // if statement
   if (tFound(TOK_IF)) {
@@ -615,24 +639,36 @@ void pStmt() {
   cEmit0(INS_DROP);
 }
 
+// parse a global decl
 void pParseGlobal(type_t type, symbol_t sym) {
+
+  if (tFound(TOK_LBRACK)) {
+    tExpect(TOK_LITERAL);
+    int size = tSymValue;
+    // xxx: todo global array decl
+    tExpect(TOK_RBRACK);
+  }
+
   sGlobalAdd(type, sym);
   tExpect(TOK_SEMI);
 }
 
+// parse a local decl
 void pParseLocal() {
   type_t   type = pType();
   token_t  name = tNext();
   symbol_t sym  = sIntern(tSym);
+
   sLocalAdd(type, sym);
   tExpect(TOK_SEMI);
 }
 
+// parse a function decl
 void pParseFunc(type_t type, symbol_t sym) {
 
   // new scope so clear args and locals
-  sArgCount   = 0;
-  sLocalCount = 0;
+  sArgs   = 0;
+  sLocals = 0;
 
   // parse arguments
   if (!tFound(TOK_RPAREN)) {
@@ -646,11 +682,11 @@ void pParseFunc(type_t type, symbol_t sym) {
   }
 
   // record new function
-  sFuncAdd(type, sym, sArgCount);
+  sFuncAdd(type, sym, sArgs);
 
   // check main takes no arguments
   if (sym == sSymMain) {
-    if (sArgCount != 0) {
+    if (sArgs != 0) {
       fatal("%u: error: main takes no arguments", lLine);
     }
   }
@@ -668,8 +704,8 @@ void pParseFunc(type_t type, symbol_t sym) {
   }
 
   // allocate space for locals
-  if (sLocalCount) {
-    cEmit1(INS_ALLOC, sLocalCount);
+  if (sLocals) {
+    cEmit1(INS_ALLOC, sLocals);
   }
 
   // parse statements
@@ -679,7 +715,7 @@ void pParseFunc(type_t type, symbol_t sym) {
 
   // return from function
   cEmit1(INS_CONST, 0);
-  cEmit1(INS_RETURN, sArgCount);
+  cEmit1(INS_RETURN, sArgs);
 }
 
 void pParse() {
@@ -734,16 +770,16 @@ void cPatch(int loc, int opr) {
 // note we do this inner to outer scope for shadowing
 void cPushSymbol(symbol_t s) {
   int i;
-  if ((i = contains(s, sLocalTable, sLocalCount)) >= 0) {
+  if ((i = contains(s, sLocalTable, sLocals)) >= 0) {
     cEmit1(INS_GETAL, i);
     return;
   }
-  if ((i = contains(s, sArgTable, sArgCount)) >= 0) {
+  if ((i = contains(s, sArgTable, sArgs)) >= 0) {
     // work backwards here to match stack indexing
-    cEmit1(INS_GETAA, sArgCount - i);
+    cEmit1(INS_GETAA, sArgs - i);
     return;
   }
-  if ((i = contains(s, sGlobalTable, sGlobalCount)) >= 0) {
+  if ((i = contains(s, sGlobalTable, sGlobals)) >= 0) {
     cEmit1(INS_GETAG, i);
     return;
   }
@@ -783,7 +819,7 @@ int main(int argc, char **args) {
   pParse();
 
   // patch in globals count
-  cPatch(globOpr, sGlobalCount);
+  cPatch(globOpr, sGlobals);
 
   // patch call to main after parsing
   symbol_t sMain = sIntern("main");

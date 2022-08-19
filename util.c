@@ -14,7 +14,7 @@ void fatal(char *msg, ...) {
 }
 
 // check if two strings match
-bool strmatch(char *a, char *b) {
+bool strMatch(char *a, char *b) {
   while (true) {
     if (*a == '\0' && *b == '\0') {
       return true;
@@ -26,13 +26,13 @@ bool strmatch(char *a, char *b) {
 }
 
 // skip a string
-char *strskip(char *c) {
+char *strSkip(char *c) {
   while (*c++);
   return c;
 }
 
 // copy a string from src to dst
-char *strcopy(char *dst, char *src) {
+char *strCopy(char *dst, char *src) {
   while (*src) {
     *dst++ = *src++;
   }
@@ -41,7 +41,7 @@ char *strcopy(char *dst, char *src) {
 }
 
 // convert a string to an integer
-int strint(char *a) {
+int strToInt(char *a) {
   int val = 0;
   while (*a != '\0') {
     val = val * 10 + *a++ - '0';
@@ -103,5 +103,49 @@ int dasm(int *cCode, int loc) {
   default:
     fatal("Unknown instruction %u at %u", ins, loc);
     return 0;
+  }
+}
+
+char *tokName(token_t tok) {
+  switch (tok) {
+  case TOK_EOF:     return "\\0";
+  case TOK_ASSIGN:  return "=";
+  case TOK_ADD:     return "+";
+  case TOK_SUB:     return "-";
+  case TOK_MUL:     return "*";
+  case TOK_DIV:     return "/";
+  case TOK_INC:     return "++";
+  case TOK_DEC:     return "--";
+  case TOK_LOGOR:   return "||";
+  case TOK_BITOR:   return "|";
+  case TOK_LOGAND:  return "&&";
+  case TOK_BITAND:  return "&";
+  case TOK_SEMI:    return ";";
+  case TOK_LPAREN:  return "(";
+  case TOK_RPAREN:  return ")";
+  case TOK_COMMA:   return ",";
+  case TOK_LBRACE:  return "{";
+  case TOK_RBRACE:  return "}";
+  case TOK_MOD:     return "%";
+  case TOK_LT:      return "<";
+  case TOK_GT:      return ">";
+  case TOK_LTEQU:   return "<=";
+  case TOK_GTEQU:   return ">=";
+  case TOK_EQU:     return "==";
+  case TOK_NEQU:    return "!=";
+  case TOK_LOGNOT:  return "!";
+  case TOK_BITNOT:  return "~";
+  case TOK_LBRACK:  return "[";
+  case TOK_RBRACK:  return "]";
+  case TOK_SYMBOL:  return "symbol";
+  case TOK_LITERAL: return "literal";
+  case TOK_IF:      return "if";
+  case TOK_INT:     return "int";
+  case TOK_RETURN:  return "return";
+  case TOK_ELSE:    return "else";
+  case TOK_CHAR:    return "char";
+  case TOK_WHILE:   return "while";
+  case TOK_DO:      return "do";
+  default:          return "unknown";
   }
 }
