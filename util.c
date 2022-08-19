@@ -144,6 +144,7 @@ char *tokName(token_t tok) {
   case TOK_RETURN:  return "return";
   case TOK_ELSE:    return "else";
   case TOK_CHAR:    return "char";
+  case TOK_VOID:    return "void";
   case TOK_WHILE:   return "while";
   case TOK_DO:      return "do";
   default:          return "unknown";

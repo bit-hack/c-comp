@@ -28,7 +28,8 @@ int      sGlobals;                 // number of globals
 symbol_t sGlobalTable[NGLOBAL];    // global table
 int      sGlobalOffs [NGLOBAL];    // global offsets
 type_t   sGlobalType [NGLOBAL];    // global type
-int      sGlobalSize;              // global size to alloc
+int      sGlobalSize [NGLOBAL];    // global size (0=not array)
+int      sGlobalSectSize;          // total global section size
 
 int      sArgs;                    // number of arguments
 symbol_t sArgTable[NARG];          // argument table
@@ -261,7 +262,7 @@ int sIntern(char *name) {
 }
 
 // a new global is being declared
-void sGlobalAdd(type_t type, symbol_t sym) {
+void sGlobalAdd(type_t type, symbol_t sym, int size) {
   if (sGlobals >= NGLOBAL)
     fatal("%u: error: global count limit reached", lLine);
   if (contains(sym, sGlobalTable, sGlobals) >= 0)
@@ -269,6 +270,9 @@ void sGlobalAdd(type_t type, symbol_t sym) {
 
   sGlobalTable[sGlobals] = sym;
   sGlobalType [sGlobals] = type;
+  sGlobalOffs [sGlobals] = sGlobalSectSize;
+  sGlobalSize [sGlobals] = size;
+  sGlobalSectSize += (size == 0) ? 1 : size;
   sGlobals++;
 }
 
@@ -326,6 +330,15 @@ int sFuncFind(symbol_t sym) {
   }
   fatal("%u: error: unknown function", lLine);
   return 0;
+}
+
+// check if a symbol is an array type
+bool sIsArray(symbol_t sym) {
+  int i;
+  if ((i = contains(sym, sGlobalTable, sGlobals)) >= 0) {
+    return sGlobalSize[i] > 0;
+  }
+  return false;
 }
 
 //----------------------------------------------------------------------------
@@ -386,7 +399,7 @@ bool pExprPrimary() {
     else {
       // place symbol value on the stack
       cPushSymbol(sym);
-      return true;
+      return !sIsArray(sym);
     }
   }
 
@@ -473,6 +486,12 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
   return lvalue;
 }
 
+void pSubscript() {
+  pExpr(1, true);
+  tExpect(TOK_RBRACK);
+  cEmit0(TOK_ADD);
+}
+
 // precedence climbing expression parser
 bool pExpr(int minPrec, bool rvalueReq) {
   bool lvalue;
@@ -482,6 +501,13 @@ bool pExpr(int minPrec, bool rvalueReq) {
 
   // lhs
   lvalue = pExprPrimary();
+
+  // array subscript
+  if (tFound(TOK_LBRACK)) {
+    pSubscript();
+    // a subscript will make an lvalue
+    lvalue = true;
+  }
 
   // apply any unary op, if we found one
   lvalue = pUnaryOpApply(lvalue, unOp);
@@ -642,14 +668,15 @@ void pStmt() {
 // parse a global decl
 void pParseGlobal(type_t type, symbol_t sym) {
 
+  int size = 0;
+
   if (tFound(TOK_LBRACK)) {
     tExpect(TOK_LITERAL);
-    int size = tSymValue;
-    // xxx: todo global array decl
+    size = tSymValue;
     tExpect(TOK_RBRACK);
   }
 
-  sGlobalAdd(type, sym);
+  sGlobalAdd(type, sym, size);
   tExpect(TOK_SEMI);
 }
 
@@ -780,7 +807,7 @@ void cPushSymbol(symbol_t s) {
     return;
   }
   if ((i = contains(s, sGlobalTable, sGlobals)) >= 0) {
-    cEmit1(INS_GETAG, i);
+    cEmit1(INS_GETAG, sGlobalOffs[i]);
     return;
   }
   fatal("%u: error: unknown identifier", lLine);
@@ -819,7 +846,7 @@ int main(int argc, char **args) {
   pParse();
 
   // patch in globals count
-  cPatch(globOpr, sGlobals);
+  cPatch(globOpr, sGlobalSectSize);
 
   // patch call to main after parsing
   symbol_t sMain = sIntern("main");
