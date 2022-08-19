@@ -192,7 +192,7 @@ int main(int argc, char **args) {
   }
 
   // execution loop
-  int i=2000;
+  int i=4000;
   while (i--) {
     if (argc > 1) {
       printf("TOS=%-3u  | ", vPeek());
