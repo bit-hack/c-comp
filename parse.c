@@ -651,6 +651,9 @@ void pStmtFor() {
     pExpr(1, true);
     tExpect(TOK_SEMI);
   }
+  else {
+    cEmit1(INS_CONST, 1);
+  }
   int jmpBody = cEmit1(INS_JNZ, -1);
   int jmpEnd  = cEmit1(INS_JMP, -1);
 
@@ -731,10 +734,13 @@ void pParseGlobal(type_t type, symbol_t sym) {
 // parse a local decl
 void pParseLocal() {
   type_t   type = pType();
-  token_t  name = tNext();
-  symbol_t sym  = sIntern(tSym);
 
-  sLocalAdd(type, sym);
+  do {
+    token_t  name = tNext();
+    symbol_t sym  = sIntern(tSym);
+    sLocalAdd(type, sym);
+  } while (tFound(TOK_COMMA));
+
   tExpect(TOK_SEMI);
 }
 

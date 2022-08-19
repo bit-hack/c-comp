@@ -1,8 +1,6 @@
 void printSierpinski(int n)
 {
-    int y;
-    int x;
-    int i;
+    int y, x, i;
 
     for (y = n - 1; y >= 0; y = y - 1) {
  
