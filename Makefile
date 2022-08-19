@@ -1,7 +1,6 @@
 CFLAGS=-O0 -g
 
 TEST_CFLAGS=\
- -fsyntax-only\
  -Wno-implicit-function-declaration\
  -Wno-overflow
 
@@ -22,7 +21,7 @@ dasm: dasm.c util.c defs.h
 test: parse exec
 	@for FILE in tests/*.c; do \
 		echo "Testing $$FILE"; \
-		gcc $$FILE; \
+		gcc ${TEST_CFLAGS} $$FILE; \
 		./a.out; \
 		echo "ref  $$?"; \
 		./parse $$FILE | ./exec; \

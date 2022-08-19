@@ -98,6 +98,7 @@ token_t tKeywordCheck() {
   case 'c': CHECK("char",   TOK_CHAR);   break;
   case 'd': CHECK("do",     TOK_DO);     break;
   case 'e': CHECK("else",   TOK_ELSE);   break;
+  case 'f': CHECK("for",    TOK_FOR);    break;
   case 'i': CHECK("int",    TOK_INT);
             CHECK("if",     TOK_IF);     break;
   case 'v': CHECK("void",   TOK_VOID);   break;
@@ -635,6 +636,38 @@ void pStmtDo() {
   cEmit1(INS_JNZ, tt);            // ---> target top  (JNZ)
 }
 
+void pStmtFor() {
+
+  tExpect(TOK_LPAREN);
+
+  // intial
+  if (!tFound(TOK_SEMI)) {
+    pExpr(1, true);
+    tExpect(TOK_SEMI);
+  }
+
+  int locCond = cPos();           // condition
+  if (!tFound(TOK_SEMI)) {
+    pExpr(1, true);
+    tExpect(TOK_SEMI);
+  }
+  int jmpBody = cEmit1(INS_JNZ, -1);
+  int jmpEnd  = cEmit1(INS_JMP, -1);
+
+  int locInc  = cPos();           // inc
+  if (!tFound(TOK_RPAREN)) {
+    pExpr(1, true);
+    tExpect(TOK_RPAREN);
+  }
+  cEmit1(INS_JMP, locCond);       // ---> cond
+
+  cPatch(jmpBody, cPos());
+  pStmt();                        // <stmt>
+  cEmit1(INS_JMP, locInc);        // ---> inc
+
+  cPatch(jmpEnd, cPos());         // jmp to the end
+}
+
 // parse a statement
 void pStmt() {
   // if statement
@@ -655,6 +688,11 @@ void pStmt() {
   // do while statement
   if (tFound(TOK_DO)) {
     pStmtDo();
+    return;
+  }
+  // for loop
+  if (tFound(TOK_FOR)) {
+    pStmtFor();
     return;
   }
   // compound statement

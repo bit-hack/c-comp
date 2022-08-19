@@ -88,6 +88,7 @@ int dasm(int *cCode, int loc) {
   DASM0(TOK_LOGOR,  "LOGOR");
   DASM0(TOK_LOGAND, "LOGAND");
   DASM0(TOK_BITOR,  "BITOR");
+  DASM0(TOK_BITAND, "BITAND");
   DASM0(TOK_MOD,    "MOD");
   DASM0(TOK_LT,     "LT");
   DASM0(TOK_GT,     "GT");
@@ -147,6 +148,7 @@ char *tokName(token_t tok) {
   case TOK_VOID:    return "void";
   case TOK_WHILE:   return "while";
   case TOK_DO:      return "do";
+  case TOK_FOR:     return "for";
   default:          return "unknown";
   }
 }

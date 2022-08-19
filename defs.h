@@ -41,6 +41,7 @@
 #define TOK_VOID    64  + 5   // void
 #define TOK_WHILE   64  + 6   // while
 #define TOK_DO      64  + 7   // do
+#define TOK_FOR     64  + 8   // for
 
 #define INS_DEREF   128 + 0   // dereference
 #define INS_CONST   128 + 1   // constant

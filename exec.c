@@ -153,8 +153,9 @@ void vStep() {
   case TOK_MUL:     vInsAlu(ins);   return;
   case TOK_DIV:     vInsAlu(ins);   return;
   case TOK_LOGOR:   vInsAlu(ins);   return;
-  case TOK_LOGAND:  vInsAlu(ins);   return;
   case TOK_BITOR:   vInsAlu(ins);   return;
+  case TOK_LOGAND:  vInsAlu(ins);   return;
+  case TOK_BITAND:  vInsAlu(ins);   return;
   case TOK_MOD:     vInsAlu(ins);   return;
   case TOK_LT:      vInsAlu(ins);   return;
   case TOK_GT:      vInsAlu(ins);   return;
@@ -193,7 +194,7 @@ int main(int argc, char **args) {
   }
 
   // execution loop
-  int i=4000;
+  int i=8000;
   while (i--) {
     if (argc > 1) {
       printf("TOS=%-3u  | ", vPeek());
