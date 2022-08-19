@@ -637,38 +637,31 @@ void pStmtDo() {
 }
 
 void pStmtFor() {
-
-  tExpect(TOK_LPAREN);
-
-  // intial
+  tExpect(TOK_LPAREN);            // (
   if (!tFound(TOK_SEMI)) {
-    pExpr(1, true);
-    tExpect(TOK_SEMI);
+    pExpr(1, true);               // <expr>
+    tExpect(TOK_SEMI);            // ;
   }
-
-  int locCond = cPos();           // condition
+  int locCond = cPos();           // .Lcond
   if (!tFound(TOK_SEMI)) {
-    pExpr(1, true);
-    tExpect(TOK_SEMI);
+    pExpr(1, true);               // <expr>
+    tExpect(TOK_SEMI);            // ;
   }
   else {
     cEmit1(INS_CONST, 1);
   }
-  int jmpBody = cEmit1(INS_JNZ, -1);
-  int jmpEnd  = cEmit1(INS_JMP, -1);
-
-  int locInc  = cPos();           // inc
+  int jmpBody = cEmit1(INS_JNZ, -1);  // .Lbody
+  int jmpEnd  = cEmit1(INS_JMP, -1);  // .Lend
+  int locInc  = cPos();           // .Linc
   if (!tFound(TOK_RPAREN)) {
-    pExpr(1, true);
-    tExpect(TOK_RPAREN);
+    pExpr(1, true);               // <expr>
+    tExpect(TOK_RPAREN);          // )
   }
-  cEmit1(INS_JMP, locCond);       // ---> cond
-
-  cPatch(jmpBody, cPos());
+  cEmit1(INS_JMP, locCond);       // ---> .lCond
+  cPatch(jmpBody, cPos());        // .Lbody
   pStmt();                        // <stmt>
-  cEmit1(INS_JMP, locInc);        // ---> inc
-
-  cPatch(jmpEnd, cPos());         // jmp to the end
+  cEmit1(INS_JMP, locInc);        // ---> .Linc
+  cPatch(jmpEnd, cPos());         // .Lend
 }
 
 // parse a statement
