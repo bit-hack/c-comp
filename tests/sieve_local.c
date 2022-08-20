@@ -15,6 +15,10 @@ void SieveOfEratosthenes(int n)
     int p;
     int i;
 
+    for (i=0; i<33; ++i) {
+        prime[i] = 0;
+    }
+
     p = 2;
 
     while (p * p <= n) {

@@ -361,7 +361,7 @@ void pExprCall(symbol_t sym) {
 
   while (!tFound(TOK_RPAREN)) {
     do {
-      pExpr(1, true);
+      pExpr(0, true);
       nargs++;
     } while (tFound(TOK_COMMA));
   }
@@ -388,7 +388,7 @@ bool pExprPrimary() {
 
   // parenthesized expression
   if (n == TOK_LPAREN) {
-    bool lvalue = pExpr(1, false);
+    bool lvalue = pExpr(0, false);
     tExpect(TOK_RPAREN);
     return lvalue;
   }
@@ -460,6 +460,7 @@ token_t pUnaryOpCheck() {
   if (tFound(TOK_SUB))    return TOK_SUB;
   if (tFound(TOK_INC))    return TOK_INC;
   if (tFound(TOK_DEC))    return TOK_DEC;
+  if (tFound(TOK_LOGNOT)) return TOK_LOGNOT;
   return 0;
 }
 
@@ -509,6 +510,11 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
     return false;
   }
 
+  // logical not
+  if (op == TOK_LOGNOT) {
+    fatal("%u: error: TOK_LOGNOT not implemented", lLine);
+  }
+
   return lvalue;
 }
 
@@ -519,7 +525,7 @@ void pSubscript(bool lvalue) {
   if (lvalue) {
     cEmit0(INS_DEREF);
   }
-  pExpr(1, true);
+  pExpr(0, true);
   tExpect(TOK_RBRACK);
   cEmit0(TOK_ADD);
 }
@@ -552,7 +558,7 @@ bool pExpr(int minPrec, bool rvalueReq) {
     if (!pIsOperator(op)) {
         break;
     }
-    if (pPrec(op) < minPrec) {
+    if (pPrec(op) <= minPrec) {
         break;
     }
     // consume operator
@@ -609,7 +615,7 @@ type_t pType() {
 void pStmtIf() {
                                   // if
   tExpect(TOK_LPAREN);            // (
-  pExpr(1, true);                 // <expr>
+  pExpr(0, true);                 // <expr>
   tExpect(TOK_RPAREN);            // )
   int tf = cEmit1(INS_JZ, -1);    // ---> target false  (JZ)
   pStmt();                        // <stmt>
@@ -629,7 +635,7 @@ void pStmtWhile() {
   int tt = cPos();                // <--- target top
                                   // while
   tExpect(TOK_LPAREN);            // (
-  pExpr(1, true);                 // <expr>
+  pExpr(0, true);                 // <expr>
   tExpect(TOK_RPAREN);            // )
   int tf = cEmit1(INS_JZ, -1);    // ---> target false  (JZ)
   pStmt();                        // <stmt>
@@ -640,7 +646,7 @@ void pStmtWhile() {
 // parse a return statement
 void pStmtReturn() {
                                   // return
-  pExpr(1, true);                 // <expr>
+  pExpr(0, true);                 // <expr>
   tExpect(TOK_SEMI);              // ;
   cEmit1(INS_RETURN, sArgs);
 }
@@ -652,7 +658,7 @@ void pStmtDo() {
   pStmt();                        // <stmt>
   tExpect(TOK_WHILE);             // while
   tExpect(TOK_LPAREN);            // (
-  pExpr(1, true);                 // <expr>
+  pExpr(0, true);                 // <expr>
   tExpect(TOK_RPAREN);            // )
   tExpect(TOK_SEMI);              // ;
   cEmit1(INS_JNZ, tt);            // ---> target top  (JNZ)
@@ -661,12 +667,12 @@ void pStmtDo() {
 void pStmtFor() {
   tExpect(TOK_LPAREN);            // (
   if (!tFound(TOK_SEMI)) {
-    pExpr(1, true);               // <expr>
+    pExpr(0, true);               // <expr>
     tExpect(TOK_SEMI);            // ;
   }
   int locCond = cPos();           // .Lcond
   if (!tFound(TOK_SEMI)) {
-    pExpr(1, true);               // <expr>
+    pExpr(0, true);               // <expr>
     tExpect(TOK_SEMI);            // ;
   }
   else {
@@ -676,7 +682,7 @@ void pStmtFor() {
   int jmpEnd  = cEmit1(INS_JMP, -1);  // .Lend
   int locInc  = cPos();           // .Linc
   if (!tFound(TOK_RPAREN)) {
-    pExpr(1, true);               // <expr>
+    pExpr(0, true);               // <expr>
     tExpect(TOK_RPAREN);          // )
   }
   cEmit1(INS_JMP, locCond);       // ---> .lCond
@@ -725,7 +731,7 @@ void pStmt() {
     return;
   }
   // expression
-  pExpr(1, true);
+  pExpr(0, true);
   tExpect(TOK_SEMI);
   // rvalue not used
   cEmit0(INS_DROP);

@@ -17,8 +17,8 @@ int vStackPtr;              // stack pointer
 int vPC;                    // program counter 
 int vFP;                    // frame pointer
 
-int vPeek() {
-  return vStack[vStackPtr - 1];
+int vPeek(int b) {
+  return vStack[vStackPtr - (1 + b)];
 }
 
 void vPush(int v) {
@@ -145,26 +145,26 @@ void vStep() {
 
   // zero operand instructions
   switch (ins) {
-  case INS_DEREF:   vInsDeref();    return;
-  case INS_DROP:    vPop();         return;
-  case TOK_ASSIGN:  vInsAssign();   return;
-  case TOK_ADD:     vInsAlu(ins);   return;
-  case TOK_SUB:     vInsAlu(ins);   return;
-  case TOK_MUL:     vInsAlu(ins);   return;
-  case TOK_DIV:     vInsAlu(ins);   return;
-  case TOK_LOGOR:   vInsAlu(ins);   return;
-  case TOK_BITOR:   vInsAlu(ins);   return;
-  case TOK_LOGAND:  vInsAlu(ins);   return;
-  case TOK_BITAND:  vInsAlu(ins);   return;
-  case TOK_MOD:     vInsAlu(ins);   return;
-  case TOK_LT:      vInsAlu(ins);   return;
-  case TOK_GT:      vInsAlu(ins);   return;
-  case TOK_LTEQU:   vInsAlu(ins);   return;
-  case TOK_GTEQU:   vInsAlu(ins);   return;
-  case TOK_EQU:     vInsAlu(ins);   return;
-  case TOK_NEQU:    vInsAlu(ins);   return;
-  case INS_NEG:     vPush(-vPop()); return;
-  case INS_DUP:     vPush(vPeek()); return;
+  case INS_DEREF:   vInsDeref();     return;
+  case INS_DROP:    vPop();          return;
+  case TOK_ASSIGN:  vInsAssign();    return;
+  case TOK_ADD:     vInsAlu(ins);    return;
+  case TOK_SUB:     vInsAlu(ins);    return;
+  case TOK_MUL:     vInsAlu(ins);    return;
+  case TOK_DIV:     vInsAlu(ins);    return;
+  case TOK_LOGOR:   vInsAlu(ins);    return;
+  case TOK_BITOR:   vInsAlu(ins);    return;
+  case TOK_LOGAND:  vInsAlu(ins);    return;
+  case TOK_BITAND:  vInsAlu(ins);    return;
+  case TOK_MOD:     vInsAlu(ins);    return;
+  case TOK_LT:      vInsAlu(ins);    return;
+  case TOK_GT:      vInsAlu(ins);    return;
+  case TOK_LTEQU:   vInsAlu(ins);    return;
+  case TOK_GTEQU:   vInsAlu(ins);    return;
+  case TOK_EQU:     vInsAlu(ins);    return;
+  case TOK_NEQU:    vInsAlu(ins);    return;
+  case INS_NEG:     vPush(-vPop());  return;
+  case INS_DUP:     vPush(vPeek(0)); return;
   }
 
   int opr = cCode[ vPC++ ];
@@ -198,7 +198,7 @@ int main(int argc, char **args) {
   int i=8000;
   while (i--) {
     if (argc > 1) {
-      printf("TOS=%-3u  | ", vPeek());
+      printf("%4d, %4d,  | ", vPeek(0), vPeek(1));
       dasm(cCode + vPC, vPC);
       printf("\n");
     }
