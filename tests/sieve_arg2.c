@@ -1,4 +1,5 @@
-// run sieve using a local array
+// run sieve when the argument was a global array, which is now passed as a
+// pointer.
 
 int number(int v) {
     int x;
@@ -9,9 +10,8 @@ int number(int v) {
     }
 }
 
-void SieveOfEratosthenes(int n)
+void SieveOfEratosthenes(int *prime, int n)
 {
-    int prime[33];
     int p;
     int i;
 
@@ -46,6 +46,8 @@ void SieveOfEratosthenes(int n)
     }
 }
 
+int prime[33];
+
 int main( ) {
-    SieveOfEratosthenes(32);
+    SieveOfEratosthenes(prime, 32);
 }

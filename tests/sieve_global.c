@@ -1,3 +1,5 @@
+// run sieve using a global array
+
 int number(int v) {
     int x;
     x = v % 10;
