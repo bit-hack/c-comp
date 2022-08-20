@@ -2,16 +2,16 @@ void printSierpinski(int n)
 {
     int y, x, i;
 
-    for (y = n - 1; y >= 0; y = y - 1) {
+    for (y = n - 1; y >= 0; --y) {
  
         // printing space till
         // the value of y
-        for (i = 0; i < y; i = i + 1) {
+        for (i = 0; i < y; ++i) {
             putchar(' ');
         }
  
         // printing '*'
-        for (x = 0; x + y < n; x = x + 1) {
+        for (x = 0; x + y < n; ++x) {
  
         // printing '*' at the appropriate position
         // is done by the and value of x and y
