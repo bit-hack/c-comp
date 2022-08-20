@@ -20,14 +20,14 @@ int      sSymbols;                 // current length of symbol table
 
 int      sFuncs;                   // number of functions
 symbol_t sFuncTable[NFUNC];        // function table
+type_t   sFuncType [NFUNC];        // function return type
 int      sFuncPos  [NFUNC];        // function code offsets
 int      sFuncArgs [NFUNC];        // function argument counts
-type_t   sFuncType [NFUNC];        // function return type
 
 int      sGlobals;                 // number of globals
 symbol_t sGlobalTable[NGLOBAL];    // global table
-int      sGlobalOffs [NGLOBAL];    // global offsets
 type_t   sGlobalType [NGLOBAL];    // global type
+int      sGlobalPos  [NGLOBAL];    // global stack offsets
 int      sGlobalSize [NGLOBAL];    // global size (0=not array)
 int      sGlobalSectSize;          // total global section size
 
@@ -38,6 +38,9 @@ type_t   sArgType [NARG];          // argument type
 int      sLocals;                  // number of locals
 symbol_t sLocalTable[NLOCAL];      // locals table
 type_t   sLocalType [NLOCAL];      // local type
+int      sLocalPos  [NLOCAL];      // stack offset of local
+int      sLocalSize [NLOCAL];      // local size (0=not array)
+int      sLocalSectSize;           // total locals size
 
 symbol_t sSymPutchar;              // putchar system call symbol
 symbol_t sSymMain;                 // main symbol
@@ -271,7 +274,7 @@ void sGlobalAdd(type_t type, symbol_t sym, int size) {
 
   sGlobalTable[sGlobals] = sym;
   sGlobalType [sGlobals] = type;
-  sGlobalOffs [sGlobals] = sGlobalSectSize;
+  sGlobalPos  [sGlobals] = sGlobalSectSize;
   sGlobalSize [sGlobals] = size;
   sGlobalSectSize += (size == 0) ? 1 : size;
   sGlobals++;
@@ -304,7 +307,7 @@ void sArgAdd(type_t type, symbol_t sym) {
 }
 
 // a new local has been declared
-void sLocalAdd(type_t type, symbol_t sym) {
+void sLocalAdd(type_t type, symbol_t sym, int size) {
   if (sLocals >= NLOCAL)
     fatal("%u: error: local count limit reached", lLine);
   if (contains(sym, sLocalTable, sLocals) >= 0)
@@ -312,6 +315,9 @@ void sLocalAdd(type_t type, symbol_t sym) {
 
   sLocalTable[sLocals] = sym;
   sLocalType [sLocals] = type;
+  sLocalPos  [sLocals] = sLocalSectSize;
+  sLocalSize [sLocals] = size;
+  sLocalSectSize += (size == 0) ? 1 : size;
   sLocals++;
 }
 
@@ -338,6 +344,9 @@ bool sIsArray(symbol_t sym) {
   int i;
   if ((i = contains(sym, sGlobalTable, sGlobals)) >= 0) {
     return sGlobalSize[i] > 0;
+  }
+  if ((i = contains(sym, sLocalTable, sLocals)) >= 0) {
+    return sLocalSize[i] > 0;
   }
   return false;
 }
@@ -711,29 +720,32 @@ void pStmt() {
 
 // parse a global decl
 void pParseGlobal(type_t type, symbol_t sym) {
-
   int size = 0;
-
   if (tFound(TOK_LBRACK)) {
     tExpect(TOK_LITERAL);
     size = tSymValue;
     tExpect(TOK_RBRACK);
   }
-
   sGlobalAdd(type, sym, size);
   tExpect(TOK_SEMI);
 }
 
 // parse a local decl
 void pParseLocal() {
-  type_t   type = pType();
-
+  type_t type = pType();
   do {
     token_t  name = tNext();
     symbol_t sym  = sIntern(tSym);
-    sLocalAdd(type, sym);
-  } while (tFound(TOK_COMMA));
 
+    int size = 0;
+    if (tFound(TOK_LBRACK)) {
+      tExpect(TOK_LITERAL);
+      size = tSymValue;
+      tExpect(TOK_RBRACK);
+    }
+
+    sLocalAdd(type, sym, size);
+  } while (tFound(TOK_COMMA));
   tExpect(TOK_SEMI);
 }
 
@@ -741,8 +753,9 @@ void pParseLocal() {
 void pParseFunc(type_t type, symbol_t sym) {
 
   // new scope so clear args and locals
-  sArgs   = 0;
-  sLocals = 0;
+  sArgs          = 0;
+  sLocals        = 0;
+  sLocalSectSize = 0;
 
   // parse arguments
   if (!tFound(TOK_RPAREN)) {
@@ -778,8 +791,8 @@ void pParseFunc(type_t type, symbol_t sym) {
   }
 
   // allocate space for locals
-  if (sLocals) {
-    cEmit1(INS_ALLOC, sLocals);
+  if (sLocalSectSize) {
+    cEmit1(INS_ALLOC, sLocalSectSize);
   }
 
   // parse statements
@@ -845,7 +858,8 @@ void cPatch(int loc, int opr) {
 void cPushSymbol(symbol_t s) {
   int i;
   if ((i = contains(s, sLocalTable, sLocals)) >= 0) {
-    cEmit1(INS_GETAL, i);
+    // index the local array
+    cEmit1(INS_GETAL, sLocalPos[i]);
     return;
   }
   if ((i = contains(s, sArgTable, sArgs)) >= 0) {
@@ -854,7 +868,7 @@ void cPushSymbol(symbol_t s) {
     return;
   }
   if ((i = contains(s, sGlobalTable, sGlobals)) >= 0) {
-    cEmit1(INS_GETAG, sGlobalOffs[i]);
+    cEmit1(INS_GETAG, sGlobalPos[i]);
     return;
   }
   fatal("%u: error: unknown identifier", lLine);
@@ -866,6 +880,7 @@ void cPushSymbol(symbol_t s) {
 
 int main(int argc, char **args) {
 
+  // idenfity reserved symbols
   sSymPutchar = sIntern("putchar");
   sSymMain    = sIntern("main");
 
