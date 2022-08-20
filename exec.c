@@ -164,6 +164,7 @@ void vStep() {
   case TOK_EQU:     vInsAlu(ins);   return;
   case TOK_NEQU:    vInsAlu(ins);   return;
   case INS_NEG:     vPush(-vPop()); return;
+  case INS_DUP:     vPush(vPeek()); return;
   }
 
   int opr = cCode[ vPC++ ];

@@ -101,6 +101,7 @@ int dasm(int *cCode, int loc) {
   DASM0(INS_DROP,   "DROP");
   DASM1(INS_SCALL,  "SCALL");
   DASM0(INS_NEG,    "NEG");
+  DASM0(INS_DUP,    "DUP");
   default:
     fatal("Unknown instruction %u at %u", ins, loc);
     return 0;

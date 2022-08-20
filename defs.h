@@ -58,6 +58,7 @@
 #define INS_SCALL   128 + 12  // system call
 #define INS_NEG     128 + 13  // unary minus
 #define INS_INDEX   128 + 14  // array subscript
+#define INS_DUP     128 + 15  // duplicate
 
 #define NFUNC       32
 #define NGLOBAL     32

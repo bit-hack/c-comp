@@ -458,6 +458,8 @@ token_t pUnaryOpCheck() {
   if (tFound(TOK_MUL))    return TOK_MUL;
   if (tFound(TOK_BITAND)) return TOK_BITAND;
   if (tFound(TOK_SUB))    return TOK_SUB;
+  if (tFound(TOK_INC))    return TOK_INC;
+  if (tFound(TOK_DEC))    return TOK_DEC;
   return 0;
 }
 
@@ -492,6 +494,17 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
     }
     // negate the value
     cEmit0(INS_NEG);
+    // its an rvalue now
+    return false;
+  }
+
+  // pre-increment, pre-decrement
+  if (op == TOK_INC || op == TOK_DEC) {
+    cEmit0(INS_DUP);
+    cEmit0(INS_DEREF);
+    cEmit1(INS_CONST, 1);
+    cEmit0(op == TOK_INC ? TOK_ADD : TOK_SUB);
+    cEmit0(TOK_ASSIGN);
     // its an rvalue now
     return false;
   }
