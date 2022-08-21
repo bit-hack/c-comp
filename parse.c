@@ -532,7 +532,7 @@ void pSubscript(bool lvalue) {
 
 // try to apply a post increment operator
 bool pExprPostInc(bool lvalue) {
-  if (tFound(TOK_INC)) {
+  if (tFound(TOK_INC) || tFound(TOK_DEC)) {
     if (!lvalue) {
       fatal("%u: post increment requires lvalue", lLine);
     }
@@ -542,7 +542,7 @@ bool pExprPostInc(bool lvalue) {
     cEmit0(INS_DUP);      // duplicate for lhs and rhs
     cEmit0(INS_DEREF);
     cEmit1(INS_CONST, 1);
-    cEmit0(TOK_ADD);      // lhs = rhs + 1
+    cEmit0(tToken == TOK_INC ? TOK_ADD : TOK_SUB); // lhs = rhs (+,-) 1
     cEmit0(TOK_ASSIGN);
     cEmit0(INS_DROP);     // remove result of assignment
                           // this leaves the old result on the top
