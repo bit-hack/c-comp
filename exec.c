@@ -139,6 +139,13 @@ void vInsScall(int opr) {
   fatal("error: unknown systemcall");
 }
 
+void vInsSwap() {
+  int x = vPop();
+  int y = vPop();
+  vPush(x);
+  vPush(y);
+}
+
 void vStep() {
 
   int ins = cCode[ vPC++ ];
@@ -165,6 +172,7 @@ void vStep() {
   case TOK_NEQU:    vInsAlu(ins);    return;
   case INS_NEG:     vPush(-vPop());  return;
   case INS_DUP:     vPush(vPeek(0)); return;
+  case INS_SWAP:    vInsSwap();      return;
   }
 
   int opr = cCode[ vPC++ ];

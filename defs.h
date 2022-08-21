@@ -59,6 +59,7 @@
 #define INS_NEG     128 + 13  // unary minus
 #define INS_INDEX   128 + 14  // array subscript
 #define INS_DUP     128 + 15  // duplicate
+#define INS_SWAP    128 + 16  // swap top items on the stack
 
 #define NFUNC       32
 #define NGLOBAL     32

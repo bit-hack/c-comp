@@ -530,6 +530,29 @@ void pSubscript(bool lvalue) {
   cEmit0(TOK_ADD);
 }
 
+// try to apply a post increment operator
+bool pExprPostInc(bool lvalue) {
+  if (tFound(TOK_INC)) {
+    if (!lvalue) {
+      fatal("%u: post increment requires lvalue", lLine);
+    }
+    cEmit0(INS_DUP);      // duplicate lvalue
+    cEmit0(INS_DEREF);    // get the old value (as rvalue)
+    cEmit0(INS_SWAP);     // bring lvalue to top again
+    cEmit0(INS_DUP);      // duplicate for lhs and rhs
+    cEmit0(INS_DEREF);
+    cEmit1(INS_CONST, 1);
+    cEmit0(TOK_ADD);      // lhs = rhs + 1
+    cEmit0(TOK_ASSIGN);
+    cEmit0(INS_DROP);     // remove result of assignment
+                          // this leaves the old result on the top
+    // rvalue is returned
+    return false;
+  }
+  // return original lvalue result
+  return lvalue;
+}
+
 // precedence climbing expression parser
 bool pExpr(int minPrec, bool rvalueReq) {
   bool lvalue;
@@ -547,6 +570,9 @@ bool pExpr(int minPrec, bool rvalueReq) {
     // they have to so that assignments work as expected.
     lvalue = true;
   }
+
+  // apply a post increment if needed
+  lvalue = pExprPostInc(lvalue);
 
   // apply any unary op, if we found one
   lvalue = pUnaryOpApply(lvalue, unOp);
