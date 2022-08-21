@@ -48,5 +48,9 @@ void SieveOfEratosthenes(int *prime, int n)
 
 int main( ) {
     int prime[33];
+    int i;
+    for (i=0; i<33; ++i) {
+        prime[i] = 0;
+    }
     SieveOfEratosthenes(prime, 32);
 }

@@ -103,9 +103,11 @@ int dasm(int *cCode, int loc) {
   DASM0(INS_NEG,    "NEG");
   DASM0(INS_DUP,    "DUP");
   DASM0(INS_SWAP,   "SWAP");
+  DASM1(INS_STRTAB, "STRTAB");
+  DASM1(INS_STR,    "STR");
   default:
-    fatal("Unknown instruction %u at %u", ins, loc);
-    return 0;
+    printf("%2u  %u", loc, ins);
+    return 1;
   }
 }
 
@@ -141,7 +143,8 @@ char *tokName(token_t tok) {
   case TOK_LBRACK:  return "[";
   case TOK_RBRACK:  return "]";
   case TOK_SYMBOL:  return "symbol";
-  case TOK_LITERAL: return "literal";
+  case TOK_INTLIT:  return "integer literal";
+  case TOK_STRLIT:  return "string literal";
   case TOK_IF:      return "if";
   case TOK_INT:     return "int";
   case TOK_RETURN:  return "return";

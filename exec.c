@@ -11,11 +11,14 @@
 int cCode[NCODELEN];        // code stream
 int cCodeLen;               // code length
 
-int vStack[STACKLEN];       // evaluation stack
+//int vStack[STACKLEN];       // evaluation stack
+int *vStack = cCode;
+int vStackBase;             // bottom of stack
 int vStackPtr;              // stack pointer
 
 int vPC;                    // program counter 
 int vFP;                    // frame pointer
+int vST;                    // string table
 
 int vPeek(int b) {
   return vStack[vStackPtr - (1 + b)];
@@ -112,11 +115,9 @@ void vInsReturn(int opr) {
   // place return value back on stack
   vPush(ret);
 
-  if (vFP == 0) {
+  if (vFP <= vStackBase) {
     int ret = vPop();
     exit(ret);
-//    printf("return from main (%d)\n", ret);
-//    exit(0);
   }
 }
 
@@ -133,7 +134,16 @@ void vInsAlloc(int opr) {
 void vInsScall(int opr) {
   if (opr == /*putchar*/0) {
     putchar(vPop());
-    vPush(0);
+    vPush(0);  // return value
+    return;
+  }
+  if (opr == /*puts*/1) {
+    int addr = vPop();
+    int c;
+    while (c = vStack[addr++]) {
+      putchar(c);
+    }
+    vPush(0);  // return value
     return;
   }
   fatal("error: unknown systemcall");
@@ -179,9 +189,11 @@ void vStep() {
 
   // one operand instructions
   switch (ins) {
+  case INS_STRTAB:  vST = opr;                      return;
+  case INS_STR:     vPush(vST + opr);               return;
   case INS_CONST:   vPush(opr);                     return;
   case INS_CALL:    vInsCall(opr);                  return;
-  case INS_GETAG:   vPush(opr);                     return;
+  case INS_GETAG:   vPush(vStackBase + opr);        return;
   case INS_GETAL:   vPush(vFP + opr);               return;
   case INS_GETAA:   vPush(vFP - opr - FRAMESIZE);   return;
   case INS_ALLOC:   vInsAlloc(opr);                 return;
@@ -201,6 +213,10 @@ int main(int argc, char **args) {
   if (ferror(stdin)) {
     fatal("stdin error");
   }
+
+  // start the stack after the code
+  vStackBase = cCodeLen;
+  vStackPtr  = cCodeLen;
 
   // execution loop
   int i=8000;

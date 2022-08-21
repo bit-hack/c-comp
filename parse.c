@@ -10,7 +10,7 @@ int      lLine;                    // currently lexed line number
 
 char     tSym[128];                // extracted currently parsed token
 int      tSymLen;                  // current symbol length
-int      tSymValue;                // value if symbol is a literal
+int      tValue;                   // value if symbol is a literal
 
 token_t  tToken;                   // last parsed token
 bool     tPeeked;                  // a peek was performed
@@ -43,10 +43,14 @@ int      sLocalSize [NLOCAL];      // local size (0=not array)
 int      sLocalSectSize;           // total locals size
 
 symbol_t sSymPutchar;              // putchar system call symbol
+symbol_t sSymPuts;                 // puts system call symbol
 symbol_t sSymMain;                 // main symbol
 
 int      cCode[NCODELEN];          // code stream
 int      cCodeLen;                 // code length
+
+char     cStrTab[NSTRTABLEN];      // length of the string table
+int      cStrTabLen;               // current string table length
 
 FILE    *inFile;                   // input file
 
@@ -151,6 +155,18 @@ token_t tNext() {
 
   tSymLen = 0;
 
+  // start of string literal
+  if (c == '"') {
+    // save current strtab offset
+    tValue = cStrTabLen;
+    // add to the string table
+    while (!lFound('"')) {
+      cStrTab[cStrTabLen++] = lNext();
+    }
+    cStrTab[cStrTabLen++] = '\0';
+    return tToken = TOK_STRLIT;
+  }
+
   // tokenize literal values
   if (lIsNumber(c)) {
     for (;;c = lNext()) {
@@ -159,8 +175,8 @@ token_t tNext() {
         break;
     }
     tSym[tSymLen] = '\0';
-    tSymValue = strToInt(tSym);
-    return tToken = TOK_LITERAL;
+    tValue = strToInt(tSym);
+    return tToken = TOK_INTLIT;
   }
 
   // tokenize alphanumeric symbols
@@ -180,8 +196,8 @@ token_t tNext() {
     if (lNext() != '\'') {
       fatal("%u: error: malformed character literal", lLine);
     }
-    tSymValue = c;
-    return tToken = TOK_LITERAL;
+    tValue = c;
+    return tToken = TOK_INTLIT;
   }
 
   // try simple tokens
@@ -323,7 +339,8 @@ void sLocalAdd(type_t type, symbol_t sym, int size) {
 
 // check if a symbol is a system call
 bool sIsSyscall(symbol_t sym) {
-  if (sym == sSymPutchar) {
+  if (sym == sSymPutchar ||
+      sym == sSymPuts) {
     return true;
   }
   return false;
@@ -392,9 +409,14 @@ bool pExprPrimary() {
     tExpect(TOK_RPAREN);
     return lvalue;
   }
+  // string literal
+  if (n == TOK_STRLIT) {
+    cEmit1(INS_STR, tValue);
+    return false;
+  }
   // integer literal
-  if (n == TOK_LITERAL) {
-    cEmit1(INS_CONST, tSymValue);
+  if (n == TOK_INTLIT) {
+    cEmit1(INS_CONST, tValue);
     return false;
   }
   // idenfitier or function call
@@ -446,6 +468,25 @@ int pPrec(token_t c) {
   case TOK_DIV:    return 9;
   }
   return 0;
+}
+
+// check if we should stop parsing an expression based on precidence
+//
+// XXX: todo
+//
+// note that depending on the operator we need to use <= and others
+// just = so that we control the associativity.
+//
+// for instance `a = b = c` should be right associative (=)
+// but `5 - 2 + 1` is left associative (<=)
+//
+bool pPrecCheck(int op, int minPrec) {
+  switch (op) {
+  case TOK_ASSIGN:
+    return pPrec(op) <  minPrec;
+  default:
+    return pPrec(op) <= minPrec;
+  }
 }
 
 // return true if this token is an operator
@@ -542,7 +583,8 @@ bool pExprPostInc(bool lvalue) {
     cEmit0(INS_DUP);      // duplicate for lhs and rhs
     cEmit0(INS_DEREF);
     cEmit1(INS_CONST, 1);
-    cEmit0(tToken == TOK_INC ? TOK_ADD : TOK_SUB); // lhs = rhs (+,-) 1
+    cEmit0(tToken == TOK_INC ? TOK_ADD : // lhs = rhs + 1
+                               TOK_SUB); // lhs = rhs - 1
     cEmit0(TOK_ASSIGN);
     cEmit0(INS_DROP);     // remove result of assignment
                           // this leaves the old result on the top
@@ -584,7 +626,9 @@ bool pExpr(int minPrec, bool rvalueReq) {
     if (!pIsOperator(op)) {
         break;
     }
-    if (pPrec(op) <= minPrec) {
+
+    // check precidence to stop parsing expression
+    if (pPrecCheck(op, minPrec)) {
         break;
     }
     // consume operator
@@ -767,8 +811,8 @@ void pStmt() {
 void pParseGlobal(type_t type, symbol_t sym) {
   int size = 0;
   if (tFound(TOK_LBRACK)) {
-    tExpect(TOK_LITERAL);
-    size = tSymValue;
+    tExpect(TOK_INTLIT);
+    size = tValue;
     tExpect(TOK_RBRACK);
   }
   sGlobalAdd(type, sym, size);
@@ -784,8 +828,8 @@ void pParseLocal() {
 
     int size = 0;
     if (tFound(TOK_LBRACK)) {
-      tExpect(TOK_LITERAL);
-      size = tSymValue;
+      tExpect(TOK_INTLIT);
+      size = tValue;
       tExpect(TOK_RBRACK);
     }
 
@@ -927,6 +971,7 @@ int main(int argc, char **args) {
 
   // idenfity reserved symbols
   sSymPutchar = sIntern("putchar");
+  sSymPuts    = sIntern("puts");
   sSymMain    = sIntern("main");
 
   // line counting starts at 1
@@ -946,8 +991,9 @@ int main(int argc, char **args) {
   lNext();
 
   // code starts with globals and call to main
-  int globOpr = cEmit1(INS_ALLOC, -1);
-  int jmpMain = cEmit1(INS_CALL, -1);
+  int strtabOpr = cEmit1(INS_STRTAB, -1);
+  int globOpr   = cEmit1(INS_ALLOC, -1);
+  int jmpMain   = cEmit1(INS_CALL, -1);
 
   // start parsing
   pParse();
@@ -959,6 +1005,12 @@ int main(int argc, char **args) {
   symbol_t sMain = sIntern("main");
   int idMain = sFuncFind(sMain);
   cPatch(jmpMain, sFuncPos[idMain]);
+
+  // patch in the string table
+  cPatch(strtabOpr, cPos());
+  for (int i=0; i<cStrTabLen; ++i) {
+    cEmit0(cStrTab[i]);
+  }
 
   // output code stream
   fwrite(cCode, 4, cCodeLen, stdout);
