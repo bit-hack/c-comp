@@ -10,7 +10,7 @@ int number(int v) {
 void swap(int* xp, int* yp)
 {
 	int temp;
-    temp = *xp;
+  temp = *xp;
 	*xp = *yp;
 	*yp = temp;
 }
