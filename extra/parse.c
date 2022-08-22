@@ -52,6 +52,7 @@ int eqstr(char *p, char *q) {
 }
 int lookup(char *name) {
   int i;
+  int j;
   char *ns;
   ns = names;
   i = 0;
@@ -63,13 +64,13 @@ int lookup(char *name) {
     i++;
   }
   while (*ns++ = *name++);
-  return nsym++;
+  j = nsym++;
+  return j;
 }
 int next() {
   int r;
   r = thechar;
   thechar = getchar();
-  printf("%u\n", thechar);
   return r;
 }
 int gobble(int t, int rr, int r) {
@@ -159,7 +160,6 @@ int getlex() {
   error("Bad input");
 }
 int istoken(int t) {
-  printf("token == %u\n", token);
   if (token == t) {
     token = getlex();
     return 1;
@@ -167,7 +167,6 @@ int istoken(int t) {
   return 0;
 }
 int expect(int t) {
-  printf("t=%u is not a token", t);
   if (!istoken(t)) {
     error("token expected");
   }

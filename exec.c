@@ -281,7 +281,7 @@ int main(int argc, char **args) {
 
   FILE *fd = stdin;
   if (argc > 1) {
-    fd = fopen(args[1], "rb");
+    fd = fopen(args[1], "r");
   }
   if (!fd) {
     fatal("error: unable to open input file");
@@ -297,15 +297,13 @@ int main(int argc, char **args) {
   vStackPtr  = cCodeLen;
 
   // execution loop
-  int i=8000;
+  int i=800000;
   while (i--) {
-#if 1
     if (argc > 2) {
       printf("%4d, %4d,  | ", vPeek(0), vPeek(1));
       dasm(cCode + vPC, vPC);
       printf("\n");
     }
-#endif
     vStep();
   }
 
