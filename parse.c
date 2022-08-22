@@ -44,6 +44,9 @@ int      sLocalSectSize;           // total locals size
 
 symbol_t sSymPutchar;              // putchar system call symbol
 symbol_t sSymPuts;                 // puts system call symbol
+symbol_t sSymPrintf;               // printf system call symbol
+symbol_t sSymGetchar;              // getchar system call symbol
+symbol_t sSymExit;                 // exit system call symbol
 symbol_t sSymMain;                 // main symbol
 
 int      cCode[NCODELEN];          // code stream
@@ -97,6 +100,10 @@ char lNext() {
 // return true if lookahead is a specific char
 bool lFound(char c) {
   return (lK1 == c) ? (lNext(), true) : false;
+}
+
+void strTabEmit(char c) {
+  cStrTab[cStrTabLen++] = c;
 }
 
 #define CHECK(X, T) if (strMatch(tSym, X)) return T;
@@ -161,9 +168,23 @@ token_t tNext() {
     tValue = cStrTabLen;
     // add to the string table
     while (!lFound('"')) {
-      cStrTab[cStrTabLen++] = lNext();
+      if (lFound('\\')) {
+        c = lNext();
+        switch (c) {
+        case 'n':  strTabEmit('\n'); break;
+        case 't':  strTabEmit('\t'); break;
+        case 'r':  strTabEmit('\r'); break;
+        case '0':  strTabEmit('\0'); break;
+        case '\\': strTabEmit('\\'); break;
+        default:
+          fatal("%u: error: unknown escape sequence", lLine);
+        }
+      }
+      else {
+        strTabEmit(lNext());
+      }
     }
-    cStrTab[cStrTabLen++] = '\0';
+    strTabEmit('\0');
     return tToken = TOK_STRLIT;
   }
 
@@ -193,6 +214,16 @@ token_t tNext() {
   // tokenize character literals
   if (c == '\'') {
     char c = lNext();
+    if (c == '\\') {
+      switch (lNext()) {
+      case '\'': c = '\''; break;
+      case '\\': c = '\\'; break;
+      case 't':  c = '\t'; break;
+      case 'n':  c = '\n'; break;
+      default:
+        fatal("%u: error: unknown escape sequence", lLine);
+      }
+    }
     if (lNext() != '\'') {
       fatal("%u: error: malformed character literal", lLine);
     }
@@ -340,7 +371,10 @@ void sLocalAdd(type_t type, symbol_t sym, int size) {
 // check if a symbol is a system call
 bool sIsSyscall(symbol_t sym) {
   if (sym == sSymPutchar ||
-      sym == sSymPuts) {
+      sym == sSymPuts    ||
+      sym == sSymPrintf  ||
+      sym == sSymGetchar ||
+      sym == sSymExit) {
     return true;
   }
   return false;
@@ -384,6 +418,9 @@ void pExprCall(symbol_t sym) {
   }
 
   if (sIsSyscall(sym)) {
+    // support variadic arguments by pushing an argument count
+    // for syscalls
+    cEmit1(INS_CONST, nargs);
     cEmit1(INS_SCALL, sym);
   }
   else {
@@ -553,7 +590,9 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
 
   // logical not
   if (op == TOK_LOGNOT) {
-    fatal("%u: error: TOK_LOGNOT not implemented", lLine);
+    cEmit0(TOK_LOGNOT);
+    // its an rvalue now
+    return false;
   }
 
   return lvalue;
@@ -972,6 +1011,9 @@ int main(int argc, char **args) {
   // idenfity reserved symbols
   sSymPutchar = sIntern("putchar");
   sSymPuts    = sIntern("puts");
+  sSymPrintf  = sIntern("printf");
+  sSymGetchar = sIntern("getchar");
+  sSymExit    = sIntern("exit");
   sSymMain    = sIntern("main");
 
   // line counting starts at 1

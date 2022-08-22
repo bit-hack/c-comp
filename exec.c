@@ -4,19 +4,18 @@
 
 #include "defs.h"
 
-#define STACKLEN 1024
+#define NMEMORY 1024*1024
 
 #define FRAMESIZE 2         // old FP, PC
 
-int cCode[NCODELEN];        // code stream
+int cCode[NMEMORY];         // code stream
 int cCodeLen;               // code length
 
-//int vStack[STACKLEN];       // evaluation stack
 int *vStack = cCode;
 int vStackBase;             // bottom of stack
 int vStackPtr;              // stack pointer
 
-int vPC;                    // program counter 
+int vPC;                    // program counter
 int vFP;                    // frame pointer
 int vST;                    // string table
 
@@ -25,7 +24,7 @@ int vPeek(int b) {
 }
 
 void vPush(int v) {
-  if (vStackPtr >= STACKLEN) {
+  if (vStackPtr >= NMEMORY) {
     fatal("error: stack overflow");
   }
   vStack[vStackPtr++] = v;
@@ -121,8 +120,8 @@ void vInsReturn(int opr) {
   }
 }
 
-void vInsAlloc(int opr) {  
-  if (vStackPtr >= STACKLEN) {
+void vInsAlloc(int opr) {
+  if (vStackPtr >= NMEMORY) {
     fatal("error: stack overflow");
   }
   // zero stack and enlarge
@@ -131,22 +130,92 @@ void vInsAlloc(int opr) {
   }
 }
 
-void vInsScall(int opr) {
-  if (opr == /*putchar*/0) {
-    putchar(vPop());
-    vPush(0);  // return value
-    return;
+void vPrintInt(const char *fmt, int value) {
+  printf(fmt, value);
+}
+
+void vPrintStr(int addr) {
+  int c;
+  while (c = vStack[addr++]) {
+    putchar(c);
   }
-  if (opr == /*puts*/1) {
-    int addr = vPop();
-    int c;
-    while (c = vStack[addr++]) {
-      putchar(c);
+}
+
+void vSysPutchar(int opr, int nargs) {
+  (void)nargs;
+  putchar(vPop());
+  vPush(0);  // return value
+}
+
+void vSysPuts(int opr, int nargs) {
+  (void)nargs;
+  int addr = vPop();
+  vPrintStr(addr);
+  vPush(0);  // return value
+}
+
+void vSysPrintf(int opr, int n) {
+
+  if (n == 0) {
+    fatal("error: insufficient arguments to printf");
+  }
+  char c;
+  int nargs = n;
+  int fmt = vPeek(--n);
+
+  bool mod = false;
+  while (c = vStack[fmt++]) {
+    if (mod) {
+      if (n <= 0) {
+        fatal("error: insufficient arguments to printf");
+      }
+      int val = vPeek(--n);
+      switch (c) {
+      case 'd': vPrintInt("%d", val); break;
+      case 'u': vPrintInt("%u", val); break;
+      case 'c': vPrintInt("%c", val); break;
+      case 's': vPrintInt("%s", val); break;
+      }
+      mod = false;
+    } else {
+      if (c == '%') {
+        mod = true;
+      }
+      else {
+        putchar(c);
+      }
     }
-    vPush(0);  // return value
-    return;
   }
-  fatal("error: unknown systemcall");
+  // pop all arguments
+  while (nargs--) {
+    vPop();
+  }
+  vPush(0);
+}
+
+void vSysGetchar() {
+  int r = getchar();
+  vPush(r);
+}
+
+void vSysExit() {
+  int code = vPop();
+  exit(code);
+  vPush(0);
+}
+
+void vInsScall(int opr) {
+
+  int nargs = vPop();
+
+  switch (opr) {
+  case 0: vSysPutchar(opr, nargs); break;
+  case 1: vSysPuts   (opr, nargs); break;
+  case 2: vSysPrintf (opr, nargs); break;
+  case 3: vSysGetchar(opr, nargs); break;
+  case 4: vSysExit   (opr, nargs); break;
+  default: fatal("error: unknown systemcall");
+  }
 }
 
 void vInsSwap() {
@@ -164,6 +233,7 @@ void vStep() {
   switch (ins) {
   case INS_DEREF:   vInsDeref();     return;
   case INS_DROP:    vPop();          return;
+  case TOK_LOGNOT:  vPush(!vPop());  return;
   case TOK_ASSIGN:  vInsAssign();    return;
   case TOK_ADD:     vInsAlu(ins);    return;
   case TOK_SUB:     vInsAlu(ins);    return;
@@ -204,14 +274,22 @@ void vStep() {
   case INS_SCALL:   vInsScall(opr);                 return;
   }
 
-  fatal("error: unknown instruction");
+  fatal("error: unknown instruction %u", ins);
 }
 
 int main(int argc, char **args) {
 
-  cCodeLen = fread(cCode, 4, NCODELEN, stdin);
+  FILE *fd = stdin;
+  if (argc > 1) {
+    fd = fopen(args[1], "rb");
+  }
+  if (!fd) {
+    fatal("error: unable to open input file");
+  }
+
+  cCodeLen = fread(cCode, 4, NCODELEN, fd);
   if (ferror(stdin)) {
-    fatal("stdin error");
+    fatal("error: fread error");
   }
 
   // start the stack after the code
@@ -221,11 +299,13 @@ int main(int argc, char **args) {
   // execution loop
   int i=8000;
   while (i--) {
-    if (argc > 1) {
+#if 1
+    if (argc > 2) {
       printf("%4d, %4d,  | ", vPeek(0), vPeek(1));
       dasm(cCode + vPC, vPC);
       printf("\n");
     }
+#endif
     vStep();
   }
 
