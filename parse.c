@@ -590,6 +590,9 @@ bool pUnaryOpApply(bool lvalue, token_t op) {
 
   // logical not
   if (op == TOK_LOGNOT) {
+    if (lvalue) {
+      cEmit0(INS_DEREF);
+    }
     cEmit0(TOK_LOGNOT);
     // its an rvalue now
     return false;
