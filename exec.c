@@ -227,6 +227,10 @@ void vInsSwap() {
 
 void vStep() {
 
+  if (vPC < 0 || vPC >= cCodeLen) {
+    fatal("error: invalid vPC 0x%08x", vPC);
+  }
+
   int ins = cCode[ vPC++ ];
 
   // zero operand instructions
@@ -287,6 +291,8 @@ int main(int argc, char **args) {
     fatal("error: unable to open input file");
   }
 
+  int trace = (argc > 2);
+
   cCodeLen = fread(cCode, 4, NCODELEN, fd);
   if (ferror(stdin)) {
     fatal("error: fread error");
@@ -297,9 +303,9 @@ int main(int argc, char **args) {
   vStackPtr  = cCodeLen;
 
   // execution loop
-  int i=800000;
-  while (i--) {
-    if (argc > 2) {
+  int max_insts=-1;
+  while (--max_insts) {
+    if (trace) {
       printf("%4d, %4d,  | ", vPeek(0), vPeek(1));
       dasm(cCode + vPC, vPC);
       printf("\n");
@@ -307,7 +313,7 @@ int main(int argc, char **args) {
     vStep();
   }
 
-  if (i < 0) {
+  if (max_insts <= 0) {
     fatal("error: program did not complete");
   }
 

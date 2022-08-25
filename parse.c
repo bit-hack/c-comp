@@ -55,19 +55,27 @@ int      cCodeLen;                 // code length
 char     cStrTab[NSTRTABLEN];      // length of the string table
 int      cStrTabLen;               // current string table length
 
+int      cContStack[NCONTINUES];   // continue stack
+int      cConts;                   // number of continues
+
+int      cBreakStack[NBREAKS];     // break stack
+int      cBreaks;                  // number of breaks
+
 FILE    *inFile;                   // input file
 
 //----------------------------------------------------------------------------
 // FORWARD DECLARATIONS
 //----------------------------------------------------------------------------
 
-bool  pExpr      (int v, bool rvalueReq);
-void  pStmt      ();
-void  cEmit0     (int c);
-int   cEmit1     (int c, int opr);
-void  cPatch     (int loc, int opr);
-int   cPos       ();
-void  cPushSymbol(symbol_t s);
+bool  pExpr       (int v, bool rvalueReq);
+void  pStmt       ();
+void  cEmit0      (int c);
+int   cEmit1      (int c, int opr);
+void  cPatch      (int loc, int opr);
+int   cPos        ();
+void  cPushSymbol (symbol_t s);
+void  cFixupBreaks(int i, int opr);
+void  cFixupConts (int i, int opr);
 
 //----------------------------------------------------------------------------
 // LEXER
@@ -109,15 +117,17 @@ void strTabEmit(char c) {
 #define CHECK(X, T) if (strMatch(tSym, X)) return T;
 token_t tKeywordCheck() {
   switch (tSym[0]) {
-  case 'c': CHECK("char",   TOK_CHAR);   break;
-  case 'd': CHECK("do",     TOK_DO);     break;
-  case 'e': CHECK("else",   TOK_ELSE);   break;
-  case 'f': CHECK("for",    TOK_FOR);    break;
-  case 'i': CHECK("int",    TOK_INT);
-            CHECK("if",     TOK_IF);     break;
-  case 'v': CHECK("void",   TOK_VOID);   break;
-  case 'r': CHECK("return", TOK_RETURN); break;
-  case 'w': CHECK("while",  TOK_WHILE);  break;
+  case 'b': CHECK("break",    TOK_BREAK);    break;
+  case 'c': CHECK("char",     TOK_CHAR);
+            CHECK("continue", TOK_CONTINUE); break;
+  case 'd': CHECK("do",       TOK_DO);       break;
+  case 'e': CHECK("else",     TOK_ELSE);     break;
+  case 'f': CHECK("for",      TOK_FOR);      break;
+  case 'i': CHECK("int",      TOK_INT);
+            CHECK("if",       TOK_IF);       break;
+  case 'v': CHECK("void",     TOK_VOID);     break;
+  case 'r': CHECK("return",   TOK_RETURN);   break;
+  case 'w': CHECK("while",    TOK_WHILE);    break;
   }
   return TOK_SYMBOL;
 }
@@ -723,6 +733,18 @@ type_t pType() {
   return type;
 }
 
+// parse a break statement
+void pStmtBreak() {
+  int opr = cEmit1(INS_JMP, -1);
+  cBreakStack[cBreaks++] = opr;
+}
+
+// parse a continue statement
+void pStmtContinue() {
+  int opr = cEmit1(INS_JMP, -1);
+  cContStack[cConts++] = opr;
+}
+
 // parse an if statement
 void pStmtIf() {
                                   // if
@@ -742,8 +764,20 @@ void pStmtIf() {
   }
 }
 
+// parse a return statement
+void pStmtReturn() {
+                                  // return
+  pExpr(0, true);                 // <expr>
+  tExpect(TOK_SEMI);              // ;
+  cEmit1(INS_RETURN, sArgs);
+}
+
 // parse a while statement
 void pStmtWhile() {
+
+  int breaks = cBreaks;
+  int conts  = cConts;
+
   int tt = cPos();                // <--- target top
                                   // while
   tExpect(TOK_LPAREN);            // (
@@ -753,30 +787,48 @@ void pStmtWhile() {
   pStmt();                        // <stmt>
   cEmit1(INS_JMP, tt);            // ---> target top    (JMP)
   cPatch(tf, cPos());             // <--- target false
-}
 
-// parse a return statement
-void pStmtReturn() {
-                                  // return
-  pExpr(0, true);                 // <expr>
-  tExpect(TOK_SEMI);              // ;
-  cEmit1(INS_RETURN, sArgs);
+  cFixupBreaks(breaks, cPos());  // <--- breaks go here
+  cFixupConts(conts, tt);
+  cBreaks = breaks;
+  cConts  = conts;
 }
 
 // parse a do while statement
 void pStmtDo() {
+
+  int breaks = cBreaks;
+  int conts  = cConts;
+
   int tt = cPos();                // <--- target top
+
+                                  // XXX: note the continue point should be the condition at the bottom
+                                  // what we _should_ do here is store the number of breaks/continues
+                                  // at the start of a loop and fix them up at the end.  we can use
+                                  // recursion to store it correctly.
+
                                   // do
   pStmt();                        // <stmt>
+
+  int cond = cPos();              // <--- continues go here
   tExpect(TOK_WHILE);             // while
   tExpect(TOK_LPAREN);            // (
   pExpr(0, true);                 // <expr>
   tExpect(TOK_RPAREN);            // )
   tExpect(TOK_SEMI);              // ;
   cEmit1(INS_JNZ, tt);            // ---> target top  (JNZ)
+
+  cFixupBreaks(breaks, cPos());  // <--- breaks go here
+  cFixupConts(conts, cond);
+  cBreaks = breaks;
+  cConts  = conts;
 }
 
 void pStmtFor() {
+
+  int breaks = cBreaks;
+  int conts  = cConts;
+
   tExpect(TOK_LPAREN);            // (
   if (!tFound(TOK_SEMI)) {
     pExpr(0, true);               // <expr>
@@ -793,6 +845,7 @@ void pStmtFor() {
   int jmpBody = cEmit1(INS_JNZ, -1);  // .Lbody
   int jmpEnd  = cEmit1(INS_JMP, -1);  // .Lend
   int locInc  = cPos();           // .Linc
+
   if (!tFound(TOK_RPAREN)) {
     pExpr(0, true);               // <expr>
     tExpect(TOK_RPAREN);          // )
@@ -802,6 +855,11 @@ void pStmtFor() {
   pStmt();                        // <stmt>
   cEmit1(INS_JMP, locInc);        // ---> .Linc
   cPatch(jmpEnd, cPos());         // .Lend
+
+  cFixupBreaks(breaks, cPos());
+  cFixupConts(conts, locInc);
+  cBreaks = breaks;
+  cConts  = conts;
 }
 
 // parse a statement
@@ -829,6 +887,16 @@ void pStmt() {
   // for loop
   if (tFound(TOK_FOR)) {
     pStmtFor();
+    return;
+  }
+  // continue
+  if (tFound(TOK_CONTINUE)) {
+    pStmtContinue();
+    return;
+  }
+  // break
+  if (tFound(TOK_BREAK)) {
+    pStmtBreak();
     return;
   }
   // compound statement
@@ -1003,6 +1071,18 @@ void cPushSymbol(symbol_t s) {
     return;
   }
   fatal("%u: error: unknown identifier", lLine);
+}
+
+void cFixupBreaks(int i, int opr) {
+  for (;i < cBreaks; ++i) {
+    cPatch(cBreakStack[i], opr);
+  }
+}
+
+void cFixupConts(int i, int opr) {
+  for (;i < cConts; ++i) {
+    cPatch(cContStack[i], opr);
+  }
 }
 
 //----------------------------------------------------------------------------

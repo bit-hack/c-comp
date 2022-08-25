@@ -22,11 +22,12 @@ int main() {
             d = d / b;
             --i;
             if (i == 0) break;
-            d *= i;
+            d = d * i;
         }
-//        printf("%.4d", c + d / 10000);
+        printf("%d", c + d / 10000);
         c = d % 10000;
     }
 
+    printf("\n");
     return 0;
 }

@@ -34,15 +34,17 @@
 #define TOK_INTLIT  33        // integer literal
 #define TOK_STRLIT  34        // string literal
 
-#define TOK_IF      64  + 0   // if
-#define TOK_INT     64  + 1   // int
-#define TOK_RETURN  64  + 2   // return
-#define TOK_ELSE    64  + 3   // else
-#define TOK_CHAR    64  + 4   // char
-#define TOK_VOID    64  + 5   // void
-#define TOK_WHILE   64  + 6   // while
-#define TOK_DO      64  + 7   // do
-#define TOK_FOR     64  + 8   // for
+#define TOK_IF        64  + 0   // if
+#define TOK_INT       64  + 1   // int
+#define TOK_RETURN    64  + 2   // return
+#define TOK_ELSE      64  + 3   // else
+#define TOK_CHAR      64  + 4   // char
+#define TOK_VOID      64  + 5   // void
+#define TOK_WHILE     64  + 6   // while
+#define TOK_DO        64  + 7   // do
+#define TOK_FOR       64  + 8   // for
+#define TOK_BREAK     64  + 9   // break
+#define TOK_CONTINUE  64  + 10  // continue
 
 #define INS_DEREF   128 + 0   // dereference
 #define INS_CONST   128 + 1   // constant
@@ -71,6 +73,8 @@
 #define SYMTABLEN   (1024*4)
 #define NCODELEN    (1024*4)
 #define NSTRTABLEN  (1024*4)
+#define NBREAKS     8
+#define NCONTINUES  8
 
 #define token_t     int
 #define symbol_t    int
