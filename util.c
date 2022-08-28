@@ -106,6 +106,7 @@ int dasm(int *cCode, int loc) {
   DASM1(INS_STRTAB, "STRTAB");
   DASM1(INS_STR,    "STR");
   DASM0(TOK_LOGNOT, "LOGNOT");
+  DASM1(INS_LINE,   "; --- line");
   default:
     printf("%2u  %u", loc, ins);
     return 1;

@@ -65,6 +65,7 @@
 #define INS_SWAP    128 + 16  // swap top items on the stack
 #define INS_STRTAB  128 + 17  // set string table location
 #define INS_STR     128 + 18  // get address of string
+#define INS_LINE    128 + 19  // source code line
 
 #define NFUNC       32
 #define NGLOBAL     32
@@ -75,6 +76,7 @@
 #define NSTRTABLEN  (1024*4)
 #define NBREAKS     8
 #define NCONTINUES  8
+#define NLINES      1024
 
 #define token_t     int
 #define symbol_t    int

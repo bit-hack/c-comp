@@ -101,7 +101,10 @@ char lNext() {
   lK0 = lK1;
   lK1 = (in >= 0) ? in : '\0';
   // track new lines
-  lLine = (lK0 == '\n') ? (lLine + 1) : lLine;
+  if (lK0 == '\n') {
+    ++lLine;
+    cEmit1(INS_LINE, lLine);
+  }
   return lK0;
 }
 

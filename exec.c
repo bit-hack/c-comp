@@ -276,6 +276,7 @@ void vStep() {
   case INS_JZ:      if (vPop() == 0) vPC = opr;     return;
   case INS_JNZ:     if (vPop() != 0) vPC = opr;     return;
   case INS_SCALL:   vInsScall(opr);                 return;
+  case INS_LINE:                                    return;
   }
 
   fatal("error: unknown instruction %u", ins);
