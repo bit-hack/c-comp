@@ -364,8 +364,14 @@ void sLocalAdd(type_t type, symbol_t sym, int size) {
   sLocalType [sLocals] = type;
   sLocalPos  [sLocals] = sLocalSectSize;
   sLocalSize [sLocals] = size;
-  sLocalSectSize += (size == 0) ? 1 : size;
+
+  int allocSize = (size == 0) ? 1 : size;
+
+  sLocalSectSize += allocSize;
   sLocals++;
+
+  // allocate a new local
+  cEmit1(INS_ALLOC, allocSize);
 }
 
 // check if a symbol is a system call
@@ -873,6 +879,17 @@ void pParseLocal() {
     }
 
     sLocalAdd(type, sym, size);
+
+    if (tFound(TOK_ASSIGN)) {
+      if (size > 0) {
+        fatal("%u: error: cant initialize array", lLine);
+      }
+      cPushSymbol(sym);
+      pExpr(0, true);
+      cEmit0(TOK_ASSIGN);
+      cEmit0(INS_DROP);
+    }
+
   } while (tFound(TOK_COMMA));
   tExpect(TOK_SEMI);
 }
@@ -919,9 +936,11 @@ void pParseFunc(type_t type, symbol_t sym) {
   }
 
   // allocate space for locals
+#if 0
   if (sLocalSectSize) {
     cEmit1(INS_ALLOC, sLocalSectSize);
   }
+#endif
 
   // parse statements
   while (!tFound(TOK_RBRACE)) {

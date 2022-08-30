@@ -2,8 +2,7 @@
 // syscalls to print an integer number
 
 int number(int v) {
-    int x;
-    x = v % 10;
+    int x = v % 10;
     if (v) {
       number(v / 10);
     }

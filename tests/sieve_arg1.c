@@ -12,10 +12,8 @@ int number(int v) {
 
 void SieveOfEratosthenes(int *prime, int n)
 {
-    int p;
+    int p = 2;
     int i;
-
-    p = 2;
 
     while (p * p <= n) {
         if (prime[p] == 0) {

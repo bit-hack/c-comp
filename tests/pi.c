@@ -2,9 +2,7 @@ int main() {
     int r[2801];
     int i, k;
     int b, d;
-    int c;
-
-    c = 0;
+    int c = 0;
 
     for (i = 0; i < 2800; ++i) {
         r[i] = 2000;

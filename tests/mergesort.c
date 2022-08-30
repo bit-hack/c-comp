@@ -23,10 +23,9 @@ void merge(int l, int m, int r)
 {
 	int L[32], R[32];
 	int i, j, k;
-	int n1, n2;
 
-	n1 = m - l + 1;
-	n2 = r - m;
+	int n1 = m - l + 1;
+	int n2 = r - m;
 
 	/* Copy data to temp arrays L[] and R[] */
 	for (i = 0; i < n1; ++i)
@@ -71,7 +70,7 @@ void merge(int l, int m, int r)
 sub-array of arr to be sorted */
 void mergeSort(int l, int r)
 {
-  int m;
+    int m;
 
 	if (l < r) {
 		// Same as (l+r)/2, but avoids overflow for
