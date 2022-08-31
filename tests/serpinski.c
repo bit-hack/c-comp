@@ -31,8 +31,7 @@ void printSierpinski(int n)
 // Driver code
 int main()
 {
-    int n;
-    n = 16;
+    int n = 16;
  
     // Function calling
     printSierpinski(n);

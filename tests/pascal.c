@@ -1,7 +1,6 @@
 
 int number(int v) {
-    int x;
-    x = v % 10;
+    int x = v % 10;
     if (v) {
       number(v / 10);
       putchar('0' + x);
@@ -10,8 +9,7 @@ int number(int v) {
 
 int binomialCoeff(int n, int k)
 {
-    int res, i;
-    res = 1;
+    int res=1, i;
     if (k > n - k)
         k = n - k;
     for (i = 0; i < k; i=i+1)
@@ -44,8 +42,7 @@ void printPascal(int n)
 // Driver program 
 int main()
 {
-    int n;
-    n = 7;
+    int n = 7;
     printPascal(n);
     return 0;
 }
