@@ -63,6 +63,7 @@ FILE    *inFile;                   // input file
 
 bool  pExpr      (int v, bool rvalueReq);
 void  pStmt      ();
+void  pParseLocal();
 void  cEmit0     (int c);
 int   cEmit1     (int c, int opr);
 void  cPatch     (int loc, int opr);
@@ -283,8 +284,8 @@ bool tFound(token_t tok) {
 }
 
 // return true if current token is a type
-bool tIsType() {
-  switch (tToken) {
+bool tIsType(token_t tok) {
+  switch (tok) {
   case TOK_CHAR:
   case TOK_INT:
   case TOK_VOID: return true;
@@ -312,12 +313,25 @@ int sIntern(char *name) {
   return sSymbols++;
 }
 
+char *sSymbolName(symbol_t sym) {
+  int i = 0;
+  for (;i<NSTRTABLEN; ++i) {
+    if (sym == 0) {
+      return sSymbolTable + i;
+    }
+    if (sSymbolTable[i] == '\0') {
+      --sym;
+    }
+  }
+  return "unknown";
+}
+
 // a new global is being declared
 void sGlobalAdd(type_t type, symbol_t sym, int size) {
   if (sGlobals >= NGLOBAL)
     fatal("%u: error: global count limit reached", lLine);
   if (contains(sym, sGlobalTable, sGlobals) >= 0)
-    fatal("%u: error: global already defined", lLine);
+    fatal("%u: error: global '%s' already defined", lLine, sSymbolName(sym));
 
   sGlobalTable[sGlobals] = sym;
   sGlobalType [sGlobals] = type;
@@ -332,7 +346,7 @@ void sFuncAdd(type_t type, symbol_t sym, int nargs) {
   if (sFuncs >= NFUNC)
     fatal("%u: error: function count limit reached", lLine);
   if (contains(sym, sFuncTable, sFuncs) >= 0)
-    fatal("%u: error: function already defined", lLine);
+    fatal("%u: error: function '%s' already defined", lLine, sSymbolName(sym));
 
   sFuncTable[sFuncs] = sym;     // save symbol
   sFuncPos  [sFuncs] = cPos();  // code position
@@ -346,7 +360,7 @@ void sArgAdd(type_t type, symbol_t sym) {
   if (sArgs >= NARG)
     fatal("%u: error: argument count limit reached", lLine);
   if (contains(sym, sArgTable, sArgs) >= 0)
-    fatal("%u: error: duplicate arguments", lLine);
+    fatal("%u: error: duplicate arguments '%s'", lLine, sSymbolName(sym));
 
   sArgTable[sArgs] = sym;
   sArgType [sArgs] = type;
@@ -358,7 +372,7 @@ void sLocalAdd(type_t type, symbol_t sym, int size) {
   if (sLocals >= NLOCAL)
     fatal("%u: error: local count limit reached", lLine);
   if (contains(sym, sLocalTable, sLocals) >= 0)
-    fatal("%u: error: local already defined", lLine);
+    fatal("%u: error: local '%s' already defined", lLine, sSymbolName(sym));
 
   sLocalTable[sLocals] = sym;
   sLocalType [sLocals] = type;
@@ -392,7 +406,7 @@ int sFuncFind(symbol_t sym) {
   if (pos >= 0) {
     return pos;
   }
-  fatal("%u: error: unknown function", lLine);
+  fatal("%u: error: unknown function '%s'", lLine, sSymbolName(sym));
   return 0;
 }
 
@@ -434,7 +448,8 @@ void pExprCall(symbol_t sym) {
 
     // verify argument count is correct
     if (nargs != sFuncArgs[f]) {
-      fatal("%u: error: function takes %u arguments", lLine, sFuncArgs[f]);
+      fatal("%u: error: function '%s' takes %u arguments",
+            lLine, sSymbolName(sym), sFuncArgs[f]);
     }
 
     cEmit1(INS_CALL, sFuncPos[f]);
@@ -445,7 +460,6 @@ void pExprCall(symbol_t sym) {
 // return true if lvalue else false
 bool pExprPrimary() {
   token_t n = tNext();
-
   // parenthesized expression
   if (n == TOK_LPAREN) {
     bool lvalue = pExpr(0, false);
@@ -514,8 +528,6 @@ int pPrec(token_t c) {
 }
 
 // check if we should stop parsing an expression based on precidence
-//
-// XXX: todo
 //
 // note that depending on the operator we need to use <= and others
 // just = so that we control the associativity.
@@ -710,7 +722,7 @@ bool pExpr(int minPrec, bool rvalueReq) {
 // parse a type
 type_t pType() {
   token_t type = tNext();
-  if (!tIsType()) {
+  if (!tIsType(type)) {
     char *c = tokName(type);
     fatal("%u: error: type expected but found '%s'", lLine, c);
   }
@@ -809,6 +821,12 @@ void pStmtFor() {
 
 // parse a statement
 void pStmt() {
+  // parse a local var decl
+  token_t tok = tPeek();
+  if (tIsType(tok)) {
+    pParseLocal();
+    return;
+  }
   // if statement
   if (tFound(TOK_IF)) {
     pStmtIf();
@@ -836,9 +854,13 @@ void pStmt() {
   }
   // compound statement
   if (tFound(TOK_LBRACE)) {
+    // save number of locals
+    int numLoc = sLocals;
     while (!tFound(TOK_RBRACE)) {
       pStmt();
     }
+    // restore number of locals
+    sLocals = numLoc;
     return;
   }
   // empty statement
@@ -926,22 +948,6 @@ void pParseFunc(type_t type, symbol_t sym) {
   // function body
   tExpect(TOK_LBRACE);
 
-  // parse locals
-  for (;;) {
-    tPeek();
-    if (!tIsType()) {
-      break;
-    }
-    pParseLocal();
-  }
-
-  // allocate space for locals
-#if 0
-  if (sLocalSectSize) {
-    cEmit1(INS_ALLOC, sLocalSectSize);
-  }
-#endif
-
   // parse statements
   while (!tFound(TOK_RBRACE)) {
     pStmt();
@@ -1018,7 +1024,7 @@ void cPushSymbol(symbol_t s) {
     cEmit1(INS_GETAG, sGlobalPos[i]);
     return;
   }
-  fatal("%u: error: unknown identifier", lLine);
+  fatal("%u: error: unknown identifier '%s'", lLine, sSymbolName(s));
 }
 
 //----------------------------------------------------------------------------

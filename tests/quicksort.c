@@ -7,22 +7,27 @@ int rand() {
 }
 
 int number(int v) {
-  int x;
-  x = v % 10;
+  int x = v % 10;
   if (v) {
     number(v / 10);
     putchar('0' + x);
   }
 }
 
+void swap(int *number, int i, int j) {
+  int temp = number[i];
+  number[i] = number[j];
+  number[j] = temp;
+}
+
 void quicksort(int *number, int first, int last) {
 
-  int i, j, pivot, temp;
+  int temp;
 
   if (first < last) {
-    pivot = first;
-    i = first;
-    j = last;
+    int pivot = first;
+    int i = first;
+    int j = last;
 
     while (i < j) {
       while (number[i] <= number[pivot] && i < last)
@@ -30,15 +35,11 @@ void quicksort(int *number, int first, int last) {
       while (number[j] > number[pivot])
         j = j - 1;
       if (i < j) {
-        temp = number[i];
-        number[i] = number[j];
-        number[j] = temp;
+        swap(number, i, j);
       }
     }
 
-    temp = number[pivot];
-    number[pivot] = number[j];
-    number[j] = temp;
+    swap(number, pivot, j);
     quicksort(number, first, j - 1);
     quicksort(number, j + 1, last);
   }
